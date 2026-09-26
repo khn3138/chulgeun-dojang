@@ -11,7 +11,9 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // 사용 중 자동 새로고침으로 입력이 날아가지 않도록 'prompt' 모드로 받아 두고,
+      // 앱을 내렸을 때(화면이 가려졌을 때) 적용한다 → 다음에 열면 새 버전. (src/main.tsx)
+      registerType: 'prompt',
       includeAssets: ['icons/favicon.svg', 'icons/apple-touch-icon.png'],
       manifest: {
         name: '출근도장',
@@ -35,8 +37,6 @@ export default defineConfig({
         // jsPDF의 .html() 기능용 선택 의존성 — 이 앱은 쓰지 않으므로 오프라인 캐시에서 뺀다.
         globIgnores: ['**/html2canvas-*.js', '**/purify.es-*.js'],
         cleanupOutdatedCaches: true,
-        clientsClaim: true,
-        skipWaiting: true,
       },
     }),
   ],

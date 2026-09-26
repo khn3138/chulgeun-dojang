@@ -764,3 +764,18 @@ textarea:focus-visible {
   color: var(--muted);
   font-size: 0.8rem;
 }
+
+/* ---------- 인앱 브라우저 안내 ---------- */
+.inapp-banner {
+  border: 3px solid var(--red);
+  border-radius: var(--radius);
+  padding: 0.7rem;
+  background: #fff4f3;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.inapp-banner p {
+  margin: 0;
+  font-weight: 600;
+}

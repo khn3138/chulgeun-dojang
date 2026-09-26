@@ -7,6 +7,7 @@ import { getRecord, restoreRecord, saveRecord } from '../db/records';
 import { formatDayTitle } from '../lib/date';
 import { appendQuickMemo, shouldAskWorked } from '../lib/memoRule';
 import { scheduleSync } from '../sync/sync';
+import { SAVE_FAILED } from '../lib/messages';
 import { HOUR_KINDS, HOUR_LABELS, normalizeDayData, type DayData, type HourKind } from '../types';
 
 // 연장·야간·추가근무는 시간 버튼으로 입력하므로 메모 버튼에서는 뺐다.
@@ -57,12 +58,14 @@ export const DaySheet = forwardRef<DaySheetHandle, Props>(function DaySheet({ da
   useEffect(() => {
     const onHide = () => {
       if (document.visibilityState === 'hidden' && loaded && !closing.current) {
-        void saveRecord(date, state.current).then(({ changed }) => {
-          if (changed) {
-            original.current = { ...state.current };
-            scheduleSync(0);
-          }
-        });
+        void saveRecord(date, state.current)
+          .then(({ changed }) => {
+            if (changed) {
+              original.current = { ...state.current };
+              scheduleSync(0);
+            }
+          })
+          .catch((e) => console.error(e));
       }
     };
     document.addEventListener('visibilitychange', onHide);
@@ -73,7 +76,15 @@ export const DaySheet = forwardRef<DaySheetHandle, Props>(function DaySheet({ da
     closing.current = true;
     // 저장을 기다리지 않고 바로 닫는다 (느린 폰에서 버튼이 안 눌린 것처럼 보이지 않게).
     onClosed();
-    const { previous, changed } = await saveRecord(date, final);
+    let result;
+    try {
+      result = await saveRecord(date, final);
+    } catch (e) {
+      console.error(e);
+      toast(SAVE_FAILED);
+      return;
+    }
+    const { previous, changed } = result;
     if (changed) {
       scheduleSync();
       toast('저장됐어요 ✓', {
