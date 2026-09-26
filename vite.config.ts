@@ -7,6 +7,8 @@ export default defineConfig({
   base: '/chulgeun-dojang/',
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
+    // 빌드마다 다른 값 (업데이트 안내 비교용)
+    __BUILD_ID__: JSON.stringify(String(Date.now())),
     // 폰에 새 버전이 들어왔는지 확인용 (한국 시간 빌드 시각)
     __BUILD_TIME__: JSON.stringify(
       new Date(Date.now() + 9 * 3600_000).toISOString().slice(5, 16).replace('T', ' '),

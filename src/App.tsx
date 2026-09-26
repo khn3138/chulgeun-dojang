@@ -24,8 +24,8 @@ function UpdateNotice() {
   useEffect(() => {
     try {
       const seen = localStorage.getItem(BUILD_KEY);
-      if (seen && seen !== __BUILD_TIME__) toast(`새 버전으로 업데이트됐어요 ✓ (${__BUILD_TIME__})`);
-      localStorage.setItem(BUILD_KEY, __BUILD_TIME__);
+      if (seen && seen !== __BUILD_ID__) toast(`새 버전으로 업데이트됐어요 ✓ (${__BUILD_TIME__})`);
+      localStorage.setItem(BUILD_KEY, __BUILD_ID__);
     } catch {
       /* 저장소를 못 쓰면 안내만 생략 */
     }

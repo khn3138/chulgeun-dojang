@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { format } from 'date-fns';
 import { db } from '../db/db';
+import { checkForUpdateNow } from '../lib/pwaUpdate';
+import { BigButton } from './BigButton';
+import { useToast } from './Toast';
 import { isEmptyRecord, type Settings } from '../types';
 
 function fmt(ms: number | undefined): string {
@@ -28,9 +31,18 @@ export function StorageStatus({ settings }: { settings: Settings }) {
   useEffect(() => {
     void navigator.storage?.persisted?.().then(setPersisted);
   }, []);
+  const toast = useToast();
+  const [checking, setChecking] = useState(false);
+  const checkUpdate = async () => {
+    setChecking(true);
+    const r = await checkForUpdateNow();
+    setChecking(false);
+    toast(r === 'updating' ? '새 버전으로 바꾸는 중이에요…' : r === 'latest' ? '최신 버전이에요 ✓' : '지금은 확인할 수 없어요 (인터넷 연결 확인)');
+  };
   const standalone = typeof matchMedia !== 'undefined' && matchMedia('(display-mode: standalone)').matches;
 
   return (
+    <>
     <dl className="status-list">
       <dt>저장소 ID</dt>
       <dd>
@@ -55,5 +67,9 @@ export function StorageStatus({ settings }: { settings: Settings }) {
         v{__APP_VERSION__} ({__BUILD_TIME__})
       </dd>
     </dl>
+    <BigButton onClick={() => void checkUpdate()} disabled={checking}>
+      {checking ? '확인하는 중…' : '🔄 새 버전 확인'}
+    </BigButton>
+    </>
   );
 }
