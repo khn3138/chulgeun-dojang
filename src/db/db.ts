@@ -19,7 +19,8 @@ export class DojangDB extends Dexie {
   }
 }
 
-export const db = new DojangDB();
+// 미리보기판은 저장소를 따로 써서 테스트 기록이 실제 기록과 섞이지 않게 한다.
+export const db = new DojangDB(__PREVIEW__ ? 'chulgeun-dojang-preview' : 'chulgeun-dojang');
 
 // 새 버전 앱이 다른 창에서 DB 구조를 올리면, 이 (예전) 화면은 더 이상 저장할 수 없다.
 // 저장이 조용히 실패하지 않도록 바로 새로고침해 새 버전으로 바꾼다.

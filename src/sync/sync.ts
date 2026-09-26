@@ -8,6 +8,7 @@ import { fetchSheet, pushSheet, type SheetConfig } from './sheetApi';
 const DEBOUNCE_MS = 3000;
 
 async function getConfig(): Promise<SheetConfig | null> {
+  if (__PREVIEW__) return null; // 미리보기판은 실제 시트에 올리지 않는다
   const s = await getSettings();
   const endpoint = s.sheetEndpoint?.trim();
   if (!endpoint) return null;

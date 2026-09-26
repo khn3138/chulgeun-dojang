@@ -119,5 +119,11 @@ src/screens/                  Home, Calendar, DaySheet, Export, Settings
 src/components/               BigButton, Toast, ConfirmDialog, MonthNav
 ```
 
+### 미리보기 (병합 전 폰에서 확인)
+- 주소: `https://khn3138.github.io/chulgeun-dojang/preview/` — 주황색 "🧪 미리보기" 띠가 보이면 미리보기판입니다.
+- 기록 저장소·홈 화면 설치 앱이 본 앱과 **완전히 분리**되고, 시트 백업은 꺼져 있어 실제 기록에 영향이 없습니다.
+- 올리는 방법: **Actions → Deploy to GitHub Pages → Run workflow** (`main`에서 실행, `preview_ref`에 브랜치 이름). 본 앱은 `main` 그대로이고 `/preview/`만 바뀝니다. `main`에 병합될 때도 작업 브랜치로 미리보기가 함께 갱신됩니다.
+- 주의: 폰의 본 앱이 **v0.6.0 이상**이어야 합니다. 그 이전 버전이 설치된 폰에서는 `/preview/`를 열어도 본 앱이 열립니다.
+
 ### 배포 설정 (한 번만)
 GitHub 저장소 **Settings → Pages → Build and deployment → Source: GitHub Actions** 로 설정한 뒤 `main`에 푸시하면 자동 배포됩니다.

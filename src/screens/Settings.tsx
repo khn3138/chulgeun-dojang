@@ -193,7 +193,11 @@ export function Settings({ onBack }: { onBack: () => void }) {
 
       <section className="card">
         <h2>구글 시트 백업</h2>
-        <p className="hint">보호자가 한 번만 설정하면 돼요. 설정 방법은 안내 문서(README)를 보세요.</p>
+        {__PREVIEW__ ? (
+          <p className="sync-message">🧪 미리보기에서는 시트 백업이 꺼져 있어요 (실제 시트 보호).</p>
+        ) : (
+          <p className="hint">보호자가 한 번만 설정하면 돼요. 설정 방법은 안내 문서(README)를 보세요.</p>
+        )}
         <SettingInput
           id="endpoint"
           label="Apps Script 웹앱 주소"
