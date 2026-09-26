@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ToastProvider } from './components/Toast';
+import { ToastProvider, useToast } from './components/Toast';
 import { monthKeyOf, todayKey } from './lib/date';
 import { useSettings } from './hooks';
 import { Calendar } from './screens/Calendar';
@@ -16,6 +16,22 @@ interface NavState {
 }
 
 const BASE_FONT_PX = 20;
+const BUILD_KEY = 'chulgeun-dojang:build';
+
+/** 새 버전으로 바뀐 뒤 처음 열면 한 번 알려 준다. (처음 설치 때는 조용히) */
+function UpdateNotice() {
+  const toast = useToast();
+  useEffect(() => {
+    try {
+      const seen = localStorage.getItem(BUILD_KEY);
+      if (seen && seen !== __BUILD_TIME__) toast(`새 버전으로 업데이트됐어요 ✓ (${__BUILD_TIME__})`);
+      localStorage.setItem(BUILD_KEY, __BUILD_TIME__);
+    } catch {
+      /* 저장소를 못 쓰면 안내만 생략 */
+    }
+  }, [toast]);
+  return null;
+}
 
 // 휴대폰 [뒤로] 버튼이 앱을 닫지 않고 이전 화면/바텀시트 닫기로 동작하도록 history를 쓴다.
 export function App() {
@@ -69,6 +85,7 @@ export function App() {
 
   return (
     <ToastProvider>
+      <UpdateNotice />
       {screen === 'home' && <Home navigate={navigate} openDay={openDay} />}
       {screen === 'calendar' && <Calendar month={month} onMonthChange={setMonth} onBack={goHome} openDay={openDay} />}
       {screen === 'export' && <Export month={month} onMonthChange={setMonth} onBack={goHome} />}
