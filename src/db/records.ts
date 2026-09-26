@@ -1,5 +1,5 @@
 import { db } from './db';
-import { isEmptyRecord, type DayRecord, type RemoteRecord } from '../types';
+import { isEmptyRecord, normalizeDayData, sameDayData, type DayData, type DayRecord, type RemoteRecord } from '../types';
 
 export async function getRecord(date: string): Promise<DayRecord | undefined> {
   return db.records.get(date);
@@ -22,24 +22,15 @@ export async function getAllRecords(): Promise<DayRecord[]> {
  */
 export async function saveRecord(
   date: string,
-  patch: { worked: boolean; memo: string },
+  patch: DayData,
 ): Promise<{ previous: DayRecord | undefined; changed: boolean }> {
   return db.transaction('rw', db.records, async () => {
     const previous = await db.records.get(date);
-    const memo = patch.memo.trim() === '' ? '' : patch.memo;
-    if (previous && previous.worked === patch.worked && previous.memo === memo) {
+    const data = normalizeDayData(patch);
+    if (previous ? sameDayData(previous, data) : isEmptyRecord(data)) {
       return { previous, changed: false };
     }
-    if (!previous && isEmptyRecord({ worked: patch.worked, memo })) {
-      return { previous, changed: false };
-    }
-    await db.records.put({
-      date,
-      worked: patch.worked,
-      memo,
-      updatedAt: Date.now(),
-      synced: false,
-    });
+    await db.records.put({ date, ...data, updatedAt: Date.now(), synced: false });
     return { previous, changed: true };
   });
 }
@@ -50,5 +41,6 @@ export async function restoreRecord(date: string, previous: DayRecord | undefine
 }
 
 export function toRemote(r: DayRecord): RemoteRecord {
-  return { date: r.date, worked: r.worked, memo: r.memo, updatedAt: r.updatedAt };
+  const { synced: _synced, ...rest } = r;
+  return rest;
 }

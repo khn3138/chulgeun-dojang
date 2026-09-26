@@ -1,13 +1,42 @@
-/** 하루치 기록. 기본 키는 date('YYYY-MM-DD', 로컬 날짜). */
-export interface DayRecord {
-  date: string;
+/** 시간 합계를 내는 근무 항목 */
+export const HOUR_KINDS = ['overtime', 'night', 'extra'] as const;
+export type HourKind = (typeof HOUR_KINDS)[number];
+export const HOUR_LABELS: Record<HourKind, string> = {
+  overtime: '연장',
+  night: '야간',
+  extra: '추가근무',
+};
+
+/** 사용자가 고치는 하루치 내용 */
+export interface DayData {
   /** 출근 여부 */
   worked: boolean;
-  /** 자유 메모 (연장, 야간, 추가근무 등). 빈 문자열 허용 */
+  /** 자유 메모. 빈 문자열 허용 */
   memo: string;
+  /** 반나절 근무 (월 합계에서 0.5일) */
+  half?: boolean;
+  /** 연장근무 시간 (30분 단위) */
+  overtime?: number;
+  /** 야간근무 시간 */
+  night?: number;
+  /** 추가근무 시간 */
+  extra?: number;
+}
+
+/** 하루치 기록. 기본 키는 date('YYYY-MM-DD', 로컬 날짜). */
+export interface DayRecord extends DayData {
+  date: string;
   /** epoch ms, 동기화 충돌 판단용 */
   updatedAt: number;
   /** 구글 시트 반영 여부 */
+  synced: boolean;
+}
+
+/** 월별 정리 메모. 기본 키는 month('YYYY-MM') */
+export interface MonthNote {
+  month: string;
+  memo: string;
+  updatedAt: number;
   synced: boolean;
 }
 
@@ -27,14 +56,45 @@ export interface Settings {
 }
 
 /** 시트/백업 파일과 주고받는 형태 (synced 플래그 제외) */
-export interface RemoteRecord {
-  date: string;
-  worked: boolean;
-  memo: string;
-  updatedAt: number;
+export type RemoteRecord = Omit<DayRecord, 'synced'>;
+export type RemoteMonth = Omit<MonthNote, 'synced'>;
+
+export function hoursOf(r: DayData, kind: HourKind): number {
+  return r[kind] ?? 0;
 }
 
 /** 출근도 메모도 없는 기록 = 지워진 날(삭제 표시). 동기화를 위해 행은 남겨 둔다. */
-export function isEmptyRecord(r: Pick<DayRecord, 'worked' | 'memo'>): boolean {
+export function isEmptyRecord(r: DayData): boolean {
   return !r.worked && r.memo.trim() === '';
+}
+
+/**
+ * 저장 전 정리: 출근 안 한 날은 반나절·근무시간을 비우고,
+ * 시간은 30분 단위로 맞춘다. 0인 값은 필드를 두지 않는다.
+ */
+export function normalizeDayData(d: DayData): DayData {
+  const out: DayData = { worked: d.worked, memo: d.memo.trim() === '' ? '' : d.memo };
+  if (!d.worked) return out;
+  if (d.half) out.half = true;
+  for (const k of HOUR_KINDS) {
+    const h = roundHalfHour(d[k] ?? 0);
+    if (h > 0) out[k] = h;
+  }
+  return out;
+}
+
+export function roundHalfHour(h: number): number {
+  if (!Number.isFinite(h) || h <= 0) return 0;
+  return Math.min(24, Math.round(h * 2) / 2);
+}
+
+export function sameDayData(a: DayData, b: DayData): boolean {
+  const x = normalizeDayData(a);
+  const y = normalizeDayData(b);
+  return (
+    x.worked === y.worked &&
+    x.memo === y.memo &&
+    !!x.half === !!y.half &&
+    HOUR_KINDS.every((k) => (x[k] ?? 0) === (y[k] ?? 0))
+  );
 }

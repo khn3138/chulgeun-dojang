@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mergeRecords, normalizeRemote } from '../sync/merge';
+import { mergeMonths, mergeRecords, normalizeRemote, normalizeRemoteMonths } from '../sync/merge';
 import type { DayRecord } from '../types';
 
 const L = (date: string, updatedAt: number, synced = true, worked = true, memo = ''): DayRecord => ({
@@ -59,5 +59,26 @@ describe('normalizeRemote', () => {
       { date: '2026-09-03', worked: false, memo: '5', updatedAt: 0 },
     ]);
     expect(normalizeRemote('x')).toEqual([]);
+  });
+});
+
+describe('반나절·근무시간·월 메모', () => {
+  it('시트 amount 0.5 → half, 시간은 숫자로', () => {
+    expect(
+      normalizeRemote([{ date: '2026-09-01', worked: 'TRUE', memo: '', updatedAt: 1, amount: 0.5, overtime: '1.5', night: '', extra: 0 }]),
+    ).toEqual([{ date: '2026-09-01', worked: true, memo: '', updatedAt: 1, half: true, overtime: 1.5 }]);
+  });
+  it('출근 안 한 날의 시간은 버린다', () => {
+    expect(normalizeRemote([{ date: '2026-09-01', worked: false, memo: 'a', overtime: 2, amount: 0 }])).toEqual([
+      { date: '2026-09-01', worked: false, memo: 'a', updatedAt: 0 },
+    ]);
+  });
+  it('월 메모 병합', () => {
+    expect(normalizeRemoteMonths([{ month: '2026-09', memo: 'x', updatedAt: 3 }, { month: '2026-9' }])).toEqual([
+      { month: '2026-09', memo: 'x', updatedAt: 3 },
+    ]);
+    const res = mergeMonths([{ month: '2026-08', memo: 'a', updatedAt: 1, synced: false }], [{ month: '2026-09', memo: 'b', updatedAt: 2 }]);
+    expect(res.toSaveLocal).toEqual([{ month: '2026-09', memo: 'b', updatedAt: 2, synced: true }]);
+    expect(res.toPush).toEqual(['2026-08']);
   });
 });

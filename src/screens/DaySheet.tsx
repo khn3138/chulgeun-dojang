@@ -1,13 +1,17 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { BigButton } from '../components/BigButton';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { HourStepper } from '../components/HourStepper';
 import { useToast } from '../components/Toast';
 import { getRecord, restoreRecord, saveRecord } from '../db/records';
 import { formatDayTitle } from '../lib/date';
 import { appendQuickMemo, shouldAskWorked } from '../lib/memoRule';
 import { scheduleSync } from '../sync/sync';
+import { HOUR_KINDS, HOUR_LABELS, normalizeDayData, type DayData, type HourKind } from '../types';
 
-const QUICK_MEMOS = ['연장', '야간', '추가근무', '조퇴', '반차'];
+// 연장·야간·추가근무는 시간 버튼으로 입력하므로 메모 버튼에서는 뺐다.
+const QUICK_MEMOS = ['조퇴', '지각'];
+const EMPTY: DayData = { worked: false, memo: '' };
 
 export interface DaySheetHandle {
   /** 뒤로 가기 버튼 등으로 닫힐 때. 필요하면 출근 여부를 묻고 저장한 뒤 onClosed를 부른다. */
@@ -22,23 +26,23 @@ interface Props {
 export const DaySheet = forwardRef<DaySheetHandle, Props>(function DaySheet({ date, onClosed }, ref) {
   const toast = useToast();
   const [loaded, setLoaded] = useState(false);
-  const [worked, setWorked] = useState(false);
-  const [memo, setMemo] = useState('');
+  const [data, setData] = useState<DayData>(EMPTY);
   const [asking, setAsking] = useState(false);
-  const original = useRef({ worked: false, memo: '' });
+  const original = useRef<DayData>(EMPTY);
   const workedTouched = useRef(false);
   const closing = useRef(false);
-  const state = useRef({ worked, memo });
-  state.current = { worked, memo };
+  const state = useRef(data);
+  state.current = data;
+  const { worked, memo } = data;
+  const setMemo = (fn: (m: string) => string) => setData((d) => ({ ...d, memo: fn(d.memo) }));
 
   useEffect(() => {
     let alive = true;
     void getRecord(date).then((r) => {
       if (!alive) return;
-      const init = { worked: r?.worked ?? false, memo: r?.memo ?? '' };
+      const init: DayData = r ? normalizeDayData(r) : EMPTY;
       original.current = init;
-      setWorked(init.worked);
-      setMemo(init.memo);
+      setData(init);
       setLoaded(true);
     });
     return () => {
@@ -62,7 +66,7 @@ export const DaySheet = forwardRef<DaySheetHandle, Props>(function DaySheet({ da
     return () => document.removeEventListener('visibilitychange', onHide);
   }, [date, loaded]);
 
-  const finish = async (final: { worked: boolean; memo: string }) => {
+  const finish = async (final: DayData) => {
     closing.current = true;
     const { previous, changed } = await saveRecord(date, final);
     onClosed();
@@ -102,8 +106,14 @@ export const DaySheet = forwardRef<DaySheetHandle, Props>(function DaySheet({ da
 
   const toggleWorked = (value: boolean) => {
     workedTouched.current = true;
-    setWorked(value);
+    // [안 함]을 누르면 반나절·근무시간도 비운다.
+    setData((d) => (value ? { ...d, worked: true } : normalizeDayData({ ...d, worked: false })));
   };
+
+  const setHalf = (half: boolean) => setData((d) => ({ ...d, worked: true, half }));
+
+  // 시간을 넣으면 출근한 날로 본다.
+  const setHours = (kind: HourKind, value: number) => setData((d) => ({ ...d, worked: d.worked || value > 0, [kind]: value }));
 
   return (
     <div className="sheet-backdrop" onClick={(e) => e.target === e.currentTarget && requestClose()}>
@@ -135,6 +145,23 @@ export const DaySheet = forwardRef<DaySheetHandle, Props>(function DaySheet({ da
           </button>
         </div>
 
+        {worked && (
+          <div className="seg day-amount" role="radiogroup" aria-label="근무량">
+            <button type="button" role="radio" aria-checked={!data.half} className={!data.half ? 'active' : ''} onClick={() => setHalf(false)}>
+              하루
+            </button>
+            <button type="button" role="radio" aria-checked={!!data.half} className={data.half ? 'active' : ''} onClick={() => setHalf(true)}>
+              반나절
+            </button>
+          </div>
+        )}
+
+        <div className="steppers">
+          {HOUR_KINDS.map((k) => (
+            <HourStepper key={k} label={HOUR_LABELS[k]} value={data[k] ?? 0} onChange={(v) => setHours(k, v)} disabled={!loaded} />
+          ))}
+        </div>
+
         <label className="memo-label" htmlFor="memo">
           메모
         </label>
@@ -143,8 +170,8 @@ export const DaySheet = forwardRef<DaySheetHandle, Props>(function DaySheet({ da
           className="memo-input"
           rows={3}
           value={memo}
-          placeholder="예: 연장, 야간"
-          onChange={(e) => setMemo(e.target.value)}
+          placeholder="예: 조퇴, 현장 이동"
+          onChange={(e) => setData((d) => ({ ...d, memo: e.target.value }))}
           disabled={!loaded}
         />
         <div className="quick-memos">
@@ -170,7 +197,7 @@ export const DaySheet = forwardRef<DaySheetHandle, Props>(function DaySheet({ da
               variant: 'primary',
               onClick: () => {
                 setAsking(false);
-                void finish({ worked: true, memo: state.current.memo });
+                void finish({ ...state.current, worked: true });
               },
             },
             {
@@ -178,7 +205,7 @@ export const DaySheet = forwardRef<DaySheetHandle, Props>(function DaySheet({ da
               variant: 'secondary',
               onClick: () => {
                 setAsking(false);
-                void finish({ worked: false, memo: state.current.memo });
+                void finish({ ...state.current, worked: false });
               },
             },
           ]}
