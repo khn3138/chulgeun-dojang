@@ -41,6 +41,8 @@ textarea {
 
 button {
   cursor: pointer;
+  /* 두 번 탭 확대 대기 없이 바로 눌리게 */
+  touch-action: manipulation;
 }
 
 button:focus-visible,
@@ -404,6 +406,18 @@ textarea:focus-visible {
     opacity: 0.6;
   }
 }
+.sheet {
+  padding-bottom: 0;
+}
+/* [닫기]는 내용이 길어도 항상 아래에 보이게 고정 */
+.sheet-footer {
+  position: sticky;
+  bottom: 0;
+  margin: 0 -16px;
+  padding: 0.6rem 16px calc(0.8rem + env(safe-area-inset-bottom));
+  background: var(--bg);
+  border-top: 1px solid var(--line);
+}
 .sheet-title {
   margin: 0;
   text-align: center;
@@ -443,7 +457,7 @@ textarea:focus-visible {
 }
 .stepper {
   display: grid;
-  grid-template-columns: 1fr var(--tap) 5.2rem var(--tap);
+  grid-template-columns: minmax(0, 1fr) var(--tap) 4.2rem var(--tap);
   align-items: center;
   gap: 0.4rem;
   padding: 0.2rem 0.2rem 0.2rem 0.7rem;
@@ -456,6 +470,7 @@ textarea:focus-visible {
 }
 .stepper-label {
   font-weight: 800;
+  white-space: nowrap;
 }
 .stepper-btn {
   height: var(--tap);
@@ -472,6 +487,7 @@ textarea:focus-visible {
 .stepper-value {
   text-align: center;
   font-weight: 800;
+  white-space: nowrap;
 }
 .memo-label {
   font-weight: 700;
@@ -540,11 +556,12 @@ textarea:focus-visible {
 }
 
 /* ---------- 토스트 ---------- */
+/* 위쪽에 띄운다: 아래쪽 [닫기]·[보내기] 버튼을 가리지 않게 */
 .toast-area {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: calc(16px + env(safe-area-inset-bottom));
+  top: calc(12px + env(safe-area-inset-top));
   display: flex;
   justify-content: center;
   pointer-events: none;
@@ -571,7 +588,7 @@ textarea:focus-visible {
 @keyframes fade-in {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(-8px);
   }
 }
 .toast-undo {

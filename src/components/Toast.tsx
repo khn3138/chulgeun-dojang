@@ -9,9 +9,15 @@ interface ToastItem {
 type ShowToast = (message: string, opts?: { undo?: () => void }) => void;
 
 const ToastContext = createContext<ShowToast>(() => undefined);
+const DismissContext = createContext<() => void>(() => undefined);
 
 export function useToast(): ShowToast {
   return useContext(ToastContext);
+}
+
+/** 떠 있는 토스트를 바로 닫는다 (바텀시트를 열 때 화면을 가리지 않게) */
+export function useDismissToast(): () => void {
+  return useContext(DismissContext);
 }
 
 const DURATION_MS = 2000;
@@ -26,6 +32,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     setToast({ id: seq.current, message, undo: opts?.undo });
   }, []);
 
+  const dismiss = useCallback(() => setToast(null), []);
+
   useEffect(() => {
     if (!toast) return;
     const t = setTimeout(() => setToast(null), toast.undo ? DURATION_WITH_UNDO_MS : DURATION_MS);
@@ -34,7 +42,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
   return (
     <ToastContext.Provider value={show}>
-      {children}
+      <DismissContext.Provider value={dismiss}>{children}</DismissContext.Provider>
       <div className="toast-area" aria-live="polite">
         {toast && (
           <div className="toast" key={toast.id}>
