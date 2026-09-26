@@ -3,6 +3,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { BigButton } from '../components/BigButton';
 import { ScreenHeader } from '../components/ScreenHeader';
+import { StorageStatus } from '../components/StorageStatus';
 import { useToast } from '../components/Toast';
 import { updateSettings } from '../db/settings';
 import { buildBackup, importBackup } from '../lib/backup';
@@ -169,7 +170,11 @@ export function Settings({ onBack }: { onBack: () => void }) {
         />
       </section>
 
-      <p className="version">출근도장 v{__APP_VERSION__}</p>
+      <section className="card">
+        <h2>저장 상태</h2>
+        <p className="hint">기록이 사라졌을 때 이 화면을 캡처해서 보내 주세요.</p>
+        <StorageStatus settings={settings} />
+      </section>
     </main>
   );
 }

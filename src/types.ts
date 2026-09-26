@@ -53,6 +53,10 @@ export interface Settings {
   fontScale: FontScale;
   /** 마지막으로 시트 백업에 성공한 시각 (epoch ms) */
   lastSyncAt?: number;
+  /** 이 저장소(폰의 이 앱)를 구분하는 짧은 ID. 저장소가 지워지면 새로 생긴다. */
+  installId?: string;
+  /** 이 저장소를 처음 쓴 시각. 데이터가 지워졌는지 확인하는 용도 */
+  installedAt?: number;
 }
 
 /** 시트/백업 파일과 주고받는 형태 (synced 플래그 제외) */

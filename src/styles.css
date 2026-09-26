@@ -779,3 +779,20 @@ textarea:focus-visible {
   margin: 0;
   font-weight: 600;
 }
+
+/* ---------- 저장 상태 ---------- */
+.status-list {
+  margin: 0;
+  display: grid;
+  gap: 0.15rem;
+  font-size: 0.9rem;
+}
+.status-list dt {
+  font-weight: 700;
+  color: var(--muted);
+  margin-top: 0.35rem;
+}
+.status-list dd {
+  margin: 0;
+  font-weight: 700;
+}
