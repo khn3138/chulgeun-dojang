@@ -305,21 +305,25 @@ textarea:focus-visible {
 }
 /* 도장 색 (설정 → 달력 표시). 노랑은 흰 글씨가 안 보여 진한 글씨 */
 .stamp-green {
+  --stamp-dark: #125c2a;
   --stamp: #1b7f3b;
   --stamp-light: #e5f4ea;
   --stamp-text: #fff;
 }
 .stamp-red {
+  --stamp-dark: #8e1c1c;
   --stamp: #c62828;
   --stamp-light: #fdeaea;
   --stamp-text: #fff;
 }
 .stamp-blue {
+  --stamp-dark: #123a85;
   --stamp: #1a4fb3;
   --stamp-light: #e6eefb;
   --stamp-text: #fff;
 }
 .stamp-yellow {
+  --stamp-dark: #7a5b00;
   --stamp: #f2b600;
   --stamp-light: #fff6d6;
   --stamp-text: #111;
@@ -378,7 +382,7 @@ textarea:focus-visible {
 .cal-hours {
   font-size: 0.6rem;
   font-weight: 800;
-  color: var(--text);
+  color: var(--stamp-dark);
   line-height: 1;
 }
 .cal-stamp-empty {
