@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { MonthNav } from '../components/MonthNav';
 import { MonthSummaryView } from '../components/MonthSummaryView';
 import { MonthMemo } from '../components/MonthMemo';
+import { Stamp } from '../components/Stamp';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { computeDayNumbers, describeDay, formatNumber, summarizeMonth } from '../lib/dayCount';
 import { dayOfMonth, daysOfMonth, firstWeekdayOfMonth, formatMonthShort, weekdayIndex, weekdayKo } from '../lib/date';
-import { useMonthRecords, useToday } from '../hooks';
+import { useLoadedSettings, useMonthRecords, useToday } from '../hooks';
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -18,6 +19,10 @@ interface Props {
 
 export function Calendar({ month, onMonthChange, onBack, openDay }: Props) {
   const today = useToday();
+  const settings = useLoadedSettings();
+  const showNumber = settings?.calShowNumber ?? true;
+  const icon = settings?.calIcon ?? 'circle';
+  const color = settings?.calColor ?? 'green';
   const records = useMonthRecords(month) ?? [];
   const [listView, setListView] = useState(false);
   const byDate = new Map(records.map((r) => [r.date, r]));
@@ -43,7 +48,7 @@ export function Calendar({ month, onMonthChange, onBack, openDay }: Props) {
       </div>
 
       {!listView ? (
-        <div className="cal">
+        <div className={`cal stamp-${color}`}>
           {WEEKDAYS.map((w, i) => (
             <div key={w} className={`cal-head wd-${i}`}>
               {w}
@@ -67,7 +72,7 @@ export function Calendar({ month, onMonthChange, onBack, openDay }: Props) {
                 aria-label={label}
               >
                 <span className="cal-day">{dayOfMonth(date)}</span>
-                {n ? <span className={`cal-stamp ${r?.half ? 'half' : ''}`}>{n}</span> : <span className="cal-stamp-empty" />}
+                {n && settings ? <Stamp icon={icon} half={r?.half} number={showNumber ? n : undefined} /> : <span className="cal-stamp-empty" />}
                 {extraHours > 0 && <span className="cal-hours">+{formatNumber(extraHours)}h</span>}
                 {r?.memo ? <span className="cal-memo">📝</span> : null}
               </button>

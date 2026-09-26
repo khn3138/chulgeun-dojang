@@ -4,6 +4,7 @@ import { ko } from 'date-fns/locale';
 import { BigButton } from '../components/BigButton';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { StorageStatus } from '../components/StorageStatus';
+import { STAMP_COLORS, STAMP_ICONS, Stamp } from '../components/Stamp';
 import { useToast } from '../components/Toast';
 import { updateSettings } from '../db/settings';
 import { buildBackup, importBackup } from '../lib/backup';
@@ -126,6 +127,68 @@ export function Settings({ onBack }: { onBack: () => void }) {
             ))}
           </div>
         </div>
+      </section>
+
+      <section className="card">
+        <h2>달력 표시</h2>
+        <label className="check-field">
+          <input
+            type="checkbox"
+            checked={settings.calShowNumber ?? true}
+            onChange={(e) => void save({ calShowNumber: e.target.checked })}
+          />
+          근무일차(1, 2, 3…) 표시
+        </label>
+        <div className="field">
+          <span className="field-label">출근 표시 모양</span>
+          <div className="seg">
+            {STAMP_ICONS.map((o) => (
+              <button
+                type="button"
+                key={o.value}
+                className={(settings.calIcon ?? 'circle') === o.value ? 'active' : ''}
+                aria-pressed={(settings.calIcon ?? 'circle') === o.value}
+                onClick={() => void save({ calIcon: o.value })}
+              >
+                {o.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="field">
+          <span className="field-label">색상</span>
+          <div className="seg colors">
+            {STAMP_COLORS.map((o) => (
+              <button
+                type="button"
+                key={o.value}
+                className={(settings.calColor ?? 'green') === o.value ? 'active' : ''}
+                aria-pressed={(settings.calColor ?? 'green') === o.value}
+                onClick={() => void save({ calColor: o.value })}
+              >
+                <span className={`color-dot stamp-${o.value}`} style={{ background: 'var(--stamp)' }} />
+                {o.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className={`stamp-preview stamp-${settings.calColor ?? 'green'}`} aria-label="미리보기">
+          {[
+            { day: 3, n: 1 },
+            { day: 4, n: 2, half: true },
+            { day: 5 },
+          ].map((d) => (
+            <div key={d.day} className={`cal-cell ${d.n ? 'worked' : ''}`}>
+              <span className="cal-day">{d.day}</span>
+              {d.n ? (
+                <Stamp icon={settings.calIcon ?? 'circle'} half={d.half} number={(settings.calShowNumber ?? true) ? d.n : undefined} />
+              ) : (
+                <span className="cal-stamp-empty" />
+              )}
+            </div>
+          ))}
+        </div>
+        <p className="hint">가운데(4일)는 반나절 근무한 날 모양이에요.</p>
       </section>
 
       <section className="card">

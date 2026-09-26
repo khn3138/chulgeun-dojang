@@ -9,6 +9,11 @@ export function useSettings(): Settings {
   return useLiveQuery(async () => ({ ...DEFAULT_SETTINGS, ...(await db.settings.get('main')) }), [], DEFAULT_SETTINGS);
 }
 
+/** 설정을 불러오기 전에는 undefined (기본값이 잠깐 보였다 바뀌는 깜빡임 방지용) */
+export function useLoadedSettings(): Settings | undefined {
+  return useLiveQuery(async () => ({ ...DEFAULT_SETTINGS, ...(await db.settings.get('main')) }), []);
+}
+
 /** 해당 월의 기록 (지워진 빈 기록 제외). 로딩 중이면 undefined */
 export function useMonthRecords(ym: string): DayRecord[] | undefined {
   return useLiveQuery(
