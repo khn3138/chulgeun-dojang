@@ -254,7 +254,9 @@ function migrateLegacy() {
   var haveMonth = {};
   readMonths_().forEach(function (m) { if (m.memo) haveMonth[m.month] = true; });
 
-  var now = Date.now();
+  // 옮긴 기록은 '가장 오래된' 기록으로 표시한다(updatedAt=1).
+  // 그래야 앱에서 이미 입력했지만 아직 시트에 안 올라간 날이 있어도 앱 쪽이 이긴다.
+  var LEGACY_TIME = 1;
   var records = [];
   var months = [];
   var width = Math.max(LEGACY_DAY_COL, LEGACY_MEMO_COL);
@@ -271,7 +273,7 @@ function migrateLegacy() {
       var memo = row[LEGACY_MEMO_COL - 1] == null ? '' : String(row[LEGACY_MEMO_COL - 1]).trim();
       var worked = num !== null;
       if (!worked && !memo) continue;
-      var rec = { date: ymKey + '-' + pad2_(d), worked: worked, memo: memo, updatedAt: now };
+      var rec = { date: ymKey + '-' + pad2_(d), worked: worked, memo: memo, updatedAt: LEGACY_TIME };
       if (worked) {
         var half = /반차|반나절/.test(memo) || num - prevNumber === 0.5;
         rec.amount = half ? 0.5 : 1;
@@ -289,7 +291,7 @@ function migrateLegacy() {
       .map(function (r) { return r.map(function (c) { return String(c).trim(); }).filter(String).join(' '); })
       .filter(String)
       .join('\n');
-    if (summary && !haveMonth[ymKey]) months.push({ month: ymKey, memo: summary, updatedAt: now });
+    if (summary && !haveMonth[ymKey]) months.push({ month: ymKey, memo: summary, updatedAt: LEGACY_TIME });
   });
 
   var n = upsert_(RECORDS, records.map(recordToRow_));

@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { BigButton } from '../components/BigButton';
+import { InAppBanner } from '../components/InAppBanner';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useToast } from '../components/Toast';
 import { restoreRecord, saveRecord } from '../db/records';
 import { computeDayNumbers, describeDay, formatHours, formatNumber, summarizeMonth } from '../lib/dayCount';
 import { formatDayTitle, monthKeyOf } from '../lib/date';
 import { scheduleSync } from '../sync/sync';
+import { SAVE_FAILED } from '../lib/messages';
 import { useMonthRecords, useToday } from '../hooks';
 import type { Screen } from '../App';
 
@@ -29,7 +31,15 @@ export function Home({ navigate, openDay }: Props) {
   const todayDetail = todayRecord ? describeDay(todayRecord) : '';
 
   const setWorked = async (value: boolean) => {
-    const { previous, changed } = await saveRecord(today, { ...(todayRecord ?? { memo: '' }), worked: value });
+    let result;
+    try {
+      result = await saveRecord(today, { ...(todayRecord ?? { memo: '' }), worked: value });
+    } catch (e) {
+      console.error(e);
+      toast(SAVE_FAILED);
+      return;
+    }
+    const { previous, changed } = result;
     if (!changed) return;
     scheduleSync();
     toast(value ? '저장됐어요 ✓' : '출근 기록을 지웠어요', {
@@ -42,6 +52,7 @@ export function Home({ navigate, openDay }: Props) {
 
   return (
     <main className="screen home">
+      <InAppBanner />
       <h1 className="home-date">{formatDayTitle(today)}</h1>
 
       <BigButton
@@ -51,7 +62,9 @@ export function Home({ navigate, openDay }: Props) {
         disabled={records === undefined}
         onClick={() => (worked ? setConfirmUnstamp(true) : void setWorked(true))}
       >
-        {worked ? (
+        {records === undefined ? (
+          '불러오는 중…'
+        ) : worked ? (
           <>
             <span className="stamp-mark" aria-hidden="true">●</span>
             오늘 출근 완료 ✓

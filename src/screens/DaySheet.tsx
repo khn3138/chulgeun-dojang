@@ -2,11 +2,12 @@ import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 're
 import { BigButton } from '../components/BigButton';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { HourStepper } from '../components/HourStepper';
-import { useToast } from '../components/Toast';
+import { useDismissToast, useToast } from '../components/Toast';
 import { getRecord, restoreRecord, saveRecord } from '../db/records';
 import { formatDayTitle } from '../lib/date';
 import { appendQuickMemo, shouldAskWorked } from '../lib/memoRule';
 import { scheduleSync } from '../sync/sync';
+import { SAVE_FAILED } from '../lib/messages';
 import { HOUR_KINDS, HOUR_LABELS, normalizeDayData, type DayData, type HourKind } from '../types';
 
 // 연장·야간·추가근무는 시간 버튼으로 입력하므로 메모 버튼에서는 뺐다.
@@ -25,6 +26,7 @@ interface Props {
 
 export const DaySheet = forwardRef<DaySheetHandle, Props>(function DaySheet({ date, onClosed }, ref) {
   const toast = useToast();
+  const dismissToast = useDismissToast();
   const [loaded, setLoaded] = useState(false);
   const [data, setData] = useState<DayData>(EMPTY);
   const [asking, setAsking] = useState(false);
@@ -35,6 +37,8 @@ export const DaySheet = forwardRef<DaySheetHandle, Props>(function DaySheet({ da
   state.current = data;
   const { worked, memo } = data;
   const setMemo = (fn: (m: string) => string) => setData((d) => ({ ...d, memo: fn(d.memo) }));
+
+  useEffect(dismissToast, [dismissToast]);
 
   useEffect(() => {
     let alive = true;
@@ -54,12 +58,14 @@ export const DaySheet = forwardRef<DaySheetHandle, Props>(function DaySheet({ da
   useEffect(() => {
     const onHide = () => {
       if (document.visibilityState === 'hidden' && loaded && !closing.current) {
-        void saveRecord(date, state.current).then(({ changed }) => {
-          if (changed) {
-            original.current = { ...state.current };
-            scheduleSync(0);
-          }
-        });
+        void saveRecord(date, state.current)
+          .then(({ changed }) => {
+            if (changed) {
+              original.current = { ...state.current };
+              scheduleSync(0);
+            }
+          })
+          .catch((e) => console.error(e));
       }
     };
     document.addEventListener('visibilitychange', onHide);
@@ -68,8 +74,17 @@ export const DaySheet = forwardRef<DaySheetHandle, Props>(function DaySheet({ da
 
   const finish = async (final: DayData) => {
     closing.current = true;
-    const { previous, changed } = await saveRecord(date, final);
+    // 저장을 기다리지 않고 바로 닫는다 (느린 폰에서 버튼이 안 눌린 것처럼 보이지 않게).
     onClosed();
+    let result;
+    try {
+      result = await saveRecord(date, final);
+    } catch (e) {
+      console.error(e);
+      toast(SAVE_FAILED);
+      return;
+    }
+    const { previous, changed } = result;
     if (changed) {
       scheduleSync();
       toast('저장됐어요 ✓', {
@@ -117,7 +132,17 @@ export const DaySheet = forwardRef<DaySheetHandle, Props>(function DaySheet({ da
 
   return (
     <div className="sheet-backdrop" onClick={(e) => e.target === e.currentTarget && requestClose()}>
-      <section className="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+      <section
+        className="sheet"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="sheet-title"
+        // 메모 입력 중(키보드가 떠 있을 때) 버튼을 누르면, 먼저 키보드가 내려가며 화면이 움직여
+        // 누른 버튼이 빗나가는 일이 생긴다. 버튼을 누를 때는 입력칸 포커스를 유지해 이를 막는다.
+        onMouseDown={(e) => {
+          if ((e.target as HTMLElement).closest('button')) e.preventDefault();
+        }}
+      >
         <h2 id="sheet-title" className="sheet-title">
           {formatDayTitle(date)}
         </h2>
@@ -182,9 +207,11 @@ export const DaySheet = forwardRef<DaySheetHandle, Props>(function DaySheet({ da
           ))}
         </div>
 
-        <BigButton variant="primary" onClick={requestClose}>
-          닫기 (자동 저장)
-        </BigButton>
+        <div className="sheet-footer">
+          <BigButton variant="primary" onClick={requestClose}>
+            닫기 (자동 저장)
+          </BigButton>
+        </div>
       </section>
 
       {asking && (
