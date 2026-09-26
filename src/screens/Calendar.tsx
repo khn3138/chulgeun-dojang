@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { MonthNav } from '../components/MonthNav';
+import { MonthSummaryView } from '../components/MonthSummaryView';
+import { MonthMemo } from '../components/MonthMemo';
 import { ScreenHeader } from '../components/ScreenHeader';
-import { computeDayNumbers } from '../lib/dayCount';
+import { computeDayNumbers, describeDay, formatNumber, summarizeMonth } from '../lib/dayCount';
 import { dayOfMonth, daysOfMonth, firstWeekdayOfMonth, formatMonthShort, weekdayIndex, weekdayKo } from '../lib/date';
 import { useMonthRecords, useToday } from '../hooks';
 
@@ -20,6 +22,7 @@ export function Calendar({ month, onMonthChange, onBack, openDay }: Props) {
   const [listView, setListView] = useState(false);
   const byDate = new Map(records.map((r) => [r.date, r]));
   const dayNumbers = computeDayNumbers(records, month);
+  const summary = summarizeMonth(records, month);
   const days = daysOfMonth(month);
   const lead = firstWeekdayOfMonth(month);
 
@@ -28,9 +31,7 @@ export function Calendar({ month, onMonthChange, onBack, openDay }: Props) {
       <ScreenHeader title="달력" onBack={onBack} />
       <MonthNav month={month} onChange={onMonthChange} />
 
-      <p className="month-total">
-        {formatMonthShort(month)} 출근 <strong>{dayNumbers.size}일</strong>
-      </p>
+      <MonthSummaryView label={`${formatMonthShort(month)} 근무`} summary={summary} />
 
       <div className="view-toggle" role="tablist">
         <button type="button" role="tab" aria-selected={!listView} className={!listView ? 'active' : ''} onClick={() => setListView(false)}>
@@ -54,7 +55,9 @@ export function Calendar({ month, onMonthChange, onBack, openDay }: Props) {
           {days.map((date) => {
             const r = byDate.get(date);
             const n = dayNumbers.get(date);
-            const label = `${dayOfMonth(date)}일${n ? `, 출근 ${n}일차` : ''}${r?.memo ? `, 메모 ${r.memo}` : ''}`;
+            const detail = r ? describeDay(r) : '';
+            const extraHours = r ? (r.overtime ?? 0) + (r.night ?? 0) + (r.extra ?? 0) : 0;
+            const label = `${dayOfMonth(date)}일${n ? `, 출근 ${n}일차` : ''}${detail ? `, ${detail}` : ''}${r?.memo ? `, 메모 ${r.memo}` : ''}`;
             return (
               <button
                 type="button"
@@ -64,7 +67,8 @@ export function Calendar({ month, onMonthChange, onBack, openDay }: Props) {
                 aria-label={label}
               >
                 <span className="cal-day">{dayOfMonth(date)}</span>
-                {n ? <span className="cal-stamp">{n}</span> : <span className="cal-stamp-empty" />}
+                {n ? <span className={`cal-stamp ${r?.half ? 'half' : ''}`}>{n}</span> : <span className="cal-stamp-empty" />}
+                {extraHours > 0 && <span className="cal-hours">+{formatNumber(extraHours)}h</span>}
                 {r?.memo ? <span className="cal-memo">📝</span> : null}
               </button>
             );
@@ -82,12 +86,14 @@ export function Calendar({ month, onMonthChange, onBack, openDay }: Props) {
                     {dayOfMonth(r.date)}일 ({weekdayKo(r.date)})
                   </span>
                   <span className={`dl-num ${r.worked ? 'worked' : ''}`}>{r.worked ? `${dayNumbers.get(r.date)}일차` : '쉼'}</span>
-                  <span className="dl-memo">{r.memo}</span>
+                  <span className="dl-memo">{[describeDay(r), r.memo].filter(Boolean).join(' · ')}</span>
                 </button>
               </li>
             ))}
         </ul>
       )}
+
+      <MonthMemo month={month} />
     </main>
   );
 }

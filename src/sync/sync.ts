@@ -1,9 +1,9 @@
 import { db } from '../db/db';
+import { monthToRemote } from '../db/months';
 import { toRemote } from '../db/records';
 import { getSettings, updateSettings } from '../db/settings';
-import { mergeRecords } from './merge';
-import { fetchSheetRecords, pushSheetRecords, type SheetConfig } from './sheetApi';
-import type { DayRecord } from '../types';
+import { mergeMonths, mergeRecords } from './merge';
+import { fetchSheet, pushSheet, type SheetConfig } from './sheetApi';
 
 const DEBOUNCE_MS = 3000;
 
@@ -16,27 +16,38 @@ async function getConfig(): Promise<SheetConfig | null> {
 
 /** 시트 데이터를 받아 updatedAt이 큰 쪽 우선으로 병합한다. */
 async function pullAndMerge(cfg: SheetConfig): Promise<void> {
-  const remote = await fetchSheetRecords(cfg);
-  await db.transaction('rw', db.records, async () => {
-    const local = await db.records.toArray();
-    const { toSaveLocal, markSynced, toPush } = mergeRecords(local, remote, true);
-    if (toSaveLocal.length) await db.records.bulkPut(toSaveLocal);
-    for (const date of markSynced) await db.records.update(date, { synced: true });
-    for (const date of toPush) await db.records.update(date, { synced: false });
+  const remote = await fetchSheet(cfg);
+  await db.transaction('rw', db.records, db.months, async () => {
+    const r = mergeRecords(await db.records.toArray(), remote.records, true);
+    if (r.toSaveLocal.length) await db.records.bulkPut(r.toSaveLocal);
+    for (const key of r.markSynced) await db.records.update(key, { synced: true });
+    for (const key of r.toPush) await db.records.update(key, { synced: false });
+
+    // 예전 Apps Script(월 메모 미지원)면 월 메모는 건드리지 않는다.
+    if (remote.months) {
+      const m = mergeMonths(await db.months.toArray(), remote.months, true);
+      if (m.toSaveLocal.length) await db.months.bulkPut(m.toSaveLocal);
+      for (const key of m.markSynced) await db.months.update(key, { synced: true });
+      for (const key of m.toPush) await db.months.update(key, { synced: false });
+    }
   });
 }
 
-/** synced=false 인 기록을 시트로 올린다. */
+/** synced=false 인 기록·월 메모를 시트로 올린다. */
 async function pushPending(cfg: SheetConfig): Promise<void> {
-  const pending = await db.records.filter((r) => !r.synced).toArray();
-  if (pending.length === 0) return;
-  await pushSheetRecords(cfg, pending.map(toRemote));
-  // 올리는 동안 다시 수정된 기록은 그대로 미동기화로 둔다.
-  const sent = new Map<string, DayRecord>(pending.map((r) => [r.date, r]));
-  await db.transaction('rw', db.records, async () => {
-    for (const [date, r] of sent) {
-      const cur = await db.records.get(date);
-      if (cur && cur.updatedAt === r.updatedAt) await db.records.update(date, { synced: true });
+  const records = await db.records.filter((r) => !r.synced).toArray();
+  const months = await db.months.filter((m) => !m.synced).toArray();
+  if (records.length === 0 && months.length === 0) return;
+  await pushSheet(cfg, records.map(toRemote), months.map(monthToRemote));
+  // 올리는 동안 다시 수정된 항목은 그대로 미동기화로 둔다.
+  await db.transaction('rw', db.records, db.months, async () => {
+    for (const r of records) {
+      const cur = await db.records.get(r.date);
+      if (cur && cur.updatedAt === r.updatedAt) await db.records.update(r.date, { synced: true });
+    }
+    for (const m of months) {
+      const cur = await db.months.get(m.month);
+      if (cur && cur.updatedAt === m.updatedAt) await db.months.update(m.month, { synced: true });
     }
   });
 }

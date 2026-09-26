@@ -143,6 +143,12 @@ textarea:focus-visible {
   color: var(--green-dark);
   font-size: 1.5rem;
 }
+.home-hours {
+  margin: -0.6rem 0 0;
+  text-align: center;
+  font-weight: 700;
+  color: var(--green-dark);
+}
 .home-memo {
   margin: 0;
   text-align: center;
@@ -204,6 +210,23 @@ textarea:focus-visible {
 .month-total strong {
   color: var(--green-dark);
   font-size: 1.5rem;
+}
+.month-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.month-hours {
+  margin: 0;
+  text-align: center;
+  font-weight: 700;
+  color: var(--green-dark);
+}
+.month-memo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-top: 0.6rem;
 }
 
 /* ---------- 달력 ---------- */
@@ -288,6 +311,18 @@ textarea:focus-visible {
   font-weight: 800;
   display: grid;
   place-items: center;
+}
+.cal-stamp.half {
+  background: linear-gradient(90deg, var(--green) 50%, #fff 50%);
+  color: var(--text);
+  border: 2px solid var(--green);
+  text-shadow: 0 0 3px #fff, 0 0 3px #fff;
+}
+.cal-hours {
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: var(--green-dark);
+  line-height: 1;
 }
 .cal-stamp-empty {
   height: 1.55rem;
@@ -397,6 +432,46 @@ textarea:focus-visible {
   border-color: var(--text);
   background: var(--soft);
   color: var(--text);
+}
+.day-amount button {
+  font-size: 1.05rem;
+}
+.steppers {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.stepper {
+  display: grid;
+  grid-template-columns: 1fr var(--tap) 5.2rem var(--tap);
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.2rem 0.2rem 0.2rem 0.7rem;
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+}
+.stepper.has-value {
+  border-color: var(--green);
+  background: var(--green-light);
+}
+.stepper-label {
+  font-weight: 800;
+}
+.stepper-btn {
+  height: var(--tap);
+  border: 2px solid var(--text);
+  border-radius: 12px;
+  background: var(--bg);
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1;
+}
+.stepper-btn:disabled {
+  opacity: 0.35;
+}
+.stepper-value {
+  text-align: center;
+  font-weight: 800;
 }
 .memo-label {
   font-weight: 700;
@@ -592,10 +667,31 @@ textarea:focus-visible {
 .es-empty {
   color: #666;
 }
-.es-total {
-  margin: 20px 0 0;
+.es-summary {
+  margin-top: 20px;
   text-align: right;
+}
+.es-total {
+  margin: 0;
   font-size: 28px;
+}
+.es-sub {
+  font-size: 20px;
+  color: #555;
+}
+.es-hours {
+  margin: 4px 0 0;
+  font-size: 22px;
+  font-weight: 700;
+}
+.es-month-memo {
+  margin: 16px 0 0;
+  padding: 12px 14px;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  font-size: 19px;
+  white-space: pre-wrap;
+  word-break: break-all;
 }
 .es-total strong {
   color: #125c2a;

@@ -1,4 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'react';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { db } from '../db/db';
 import { BigButton } from '../components/BigButton';
 import { MonthNav } from '../components/MonthNav';
 import { ScreenHeader } from '../components/ScreenHeader';
@@ -20,6 +22,7 @@ const SHEET_WIDTH = 720;
 export function Export({ month, onMonthChange, onBack }: Props) {
   const settings = useSettings();
   const records = useMonthRecords(month);
+  const monthNote = useLiveQuery(() => db.months.get(month), [month]);
   const toast = useToast();
   const [includeMemoOnly, setIncludeMemoOnly] = useState(false);
   const [busy, setBusy] = useState<'png' | 'pdf' | null>(null);
@@ -101,6 +104,7 @@ export function Export({ month, onMonthChange, onBack }: Props) {
             workerName={settings.workerName}
             records={records ?? []}
             includeMemoOnly={includeMemoOnly}
+            monthMemo={monthNote?.memo ?? ''}
             generatedAt={generatedAt}
           />
         </div>

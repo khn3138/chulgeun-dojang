@@ -3,7 +3,7 @@ import { BigButton } from '../components/BigButton';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useToast } from '../components/Toast';
 import { restoreRecord, saveRecord } from '../db/records';
-import { computeDayNumbers } from '../lib/dayCount';
+import { computeDayNumbers, describeDay, formatHours, formatNumber, summarizeMonth } from '../lib/dayCount';
 import { formatDayTitle, monthKeyOf } from '../lib/date';
 import { scheduleSync } from '../sync/sync';
 import { useMonthRecords, useToday } from '../hooks';
@@ -24,10 +24,12 @@ export function Home({ navigate, openDay }: Props) {
   const todayRecord = records?.find((r) => r.date === today);
   const worked = todayRecord?.worked ?? false;
   const dayNumbers = computeDayNumbers(records ?? [], ym);
-  const monthCount = dayNumbers.size;
+  const summary = summarizeMonth(records ?? [], ym);
+  const monthHours = formatHours(summary.hours);
+  const todayDetail = todayRecord ? describeDay(todayRecord) : '';
 
   const setWorked = async (value: boolean) => {
-    const { previous, changed } = await saveRecord(today, { worked: value, memo: todayRecord?.memo ?? '' });
+    const { previous, changed } = await saveRecord(today, { ...(todayRecord ?? { memo: '' }), worked: value });
     if (!changed) return;
     scheduleSync();
     toast(value ? '저장됐어요 ✓' : '출근 기록을 지웠어요', {
@@ -65,12 +67,15 @@ export function Home({ navigate, openDay }: Props) {
       </BigButton>
 
       <p className="home-count">
-        이번 달 출근: <strong>{monthCount}일</strong>
+        이번 달 근무: <strong>{formatNumber(summary.days)}일</strong>
       </p>
-      {todayRecord?.memo && <p className="home-memo">📝 오늘 메모: {todayRecord.memo}</p>}
+      {monthHours && <p className="home-hours">{monthHours}</p>}
+      {(todayDetail || todayRecord?.memo) && (
+        <p className="home-memo">📝 오늘: {[todayDetail, todayRecord?.memo].filter(Boolean).join(' · ')}</p>
+      )}
 
       <div className="home-actions">
-        <BigButton onClick={() => openDay(today)}>📝 메모 쓰기</BigButton>
+        <BigButton onClick={() => openDay(today)}>📝 메모 · 연장 쓰기</BigButton>
         <div className="row-2">
           <BigButton onClick={() => navigate('calendar')}>📅 달력 보기</BigButton>
           <BigButton onClick={() => navigate('export')}>📤 보내기</BigButton>

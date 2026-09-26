@@ -35,3 +35,34 @@ describe('N일차 계산', () => {
     expect(map.get('2026-09-10')).toBe(2);
   });
 });
+
+describe('월 합계 (반나절·근무시간)', () => {
+  const R = (date: string, extra: Partial<import('../types').DayRecord> = {}) => ({
+    date, worked: true, memo: '', updatedAt: 0, synced: true, ...extra,
+  });
+  const records = [
+    R('2026-09-01', { overtime: 1 }),
+    R('2026-09-02', { half: true }),
+    R('2026-09-03', { overtime: 1, night: 2 }),
+    R('2026-09-04', { worked: false, memo: '쉼' }),
+    R('2026-08-31', { overtime: 5 }),
+  ];
+
+  it('반나절은 0.5일, 시간은 항목별로 더한다', async () => {
+    const { summarizeMonth, formatHours, formatNumber } = await import('../lib/dayCount');
+    const s = summarizeMonth(records, '2026-09');
+    expect(s).toEqual({ days: 2.5, workedCount: 3, hours: { overtime: 2, night: 2, extra: 0 } });
+    expect(formatNumber(s.days)).toBe('2.5');
+    expect(formatHours(s.hours)).toBe('연장 2시간 · 야간 2시간');
+  });
+
+  it('반나절도 일차 순번은 1씩', () => {
+    expect(computeDayNumbers(records, '2026-09').get('2026-09-03')).toBe(3);
+  });
+
+  it('하루 요약', async () => {
+    const { describeDay } = await import('../lib/dayCount');
+    expect(describeDay(R('2026-09-02', { half: true, extra: 1.5 }))).toBe('반나절 · 추가근무 1.5시간');
+    expect(describeDay(R('2026-09-02', { worked: false }))).toBe('');
+  });
+});
