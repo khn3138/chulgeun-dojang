@@ -41,6 +41,8 @@ export interface MonthNote {
 }
 
 export type FontScale = 1 | 1.2 | 1.4;
+export type StampIcon = 'circle' | 'hammer';
+export type StampColor = 'green' | 'red' | 'blue' | 'yellow';
 
 export interface Settings {
   id: 'main';
@@ -51,6 +53,12 @@ export interface Settings {
   /** Apps Script에 함께 보내는 간단한 비밀값 */
   syncToken?: string;
   fontScale: FontScale;
+  /** 달력: 출근 도장 안에 N일차 숫자 표시 (기본 켜짐) */
+  calShowNumber?: boolean;
+  /** 달력: 출근 도장 모양 (기본 동그라미) */
+  calIcon?: StampIcon;
+  /** 달력: 출근 도장 색 (기본 초록) */
+  calColor?: StampColor;
   /** 마지막으로 시트 백업에 성공한 시각 (epoch ms) */
   lastSyncAt?: number;
   /** 이 저장소(폰의 이 앱)를 구분하는 짧은 ID. 저장소가 지워지면 새로 생긴다. */
