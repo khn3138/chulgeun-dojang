@@ -137,12 +137,13 @@ describe('Apps Script', () => {
     legacy.set(3, 2, '병원'); // 쉬는 날 메모만
     legacy.set(4, 1, 3); legacy.set(4, 2, '반차');
     legacy.set(10, 1, 4); legacy.set(10, 2, '연장근무 1시간 30분, 야간 2');
+    legacy.set(11, 1, 5); legacy.set(11, 2, '반공수');
     legacy.set(32, 1, '21.5일 근무');
     legacy.set(33, 1, '연장 3시간');
     gs.ss.insertSheet('월별요약').set(1, 1, 99); // 월 탭이 아니면 무시
 
     gs.migrateLegacy();
-    expect(gs.logs.at(-1)).toBe('옮긴 기록: 5일, 월 정리 메모: 1개월');
+    expect(gs.logs.at(-1)).toBe('옮긴 기록: 6일, 월 정리 메모: 1개월');
     const year = new Date().getFullYear();
     const got = gs.doGet({ parameter: { token: 'tok' } });
     const brief = got.records.map((r: any) => [r.date.slice(5), r.worked, r.memo, r.amount, r.overtime, r.night]);
@@ -152,6 +153,7 @@ describe('Apps Script', () => {
       ['09-03', false, '병원', 0, 0, 0],
       ['09-04', true, '반차', 0.5, 0, 0],
       ['09-10', true, '연장근무 1시간 30분, 야간 2', 1, 1.5, 2],
+      ['09-11', true, '반공수', 0.5, 0, 0],
     ]);
     expect(got.records[0].date).toBe(`${year}-09-01`);
     expect(got.months[0]).toMatchObject({ month: `${year}-09`, memo: '21.5일 근무\n연장 3시간' });

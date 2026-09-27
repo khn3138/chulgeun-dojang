@@ -56,13 +56,18 @@ describe('월 합계 (반나절·근무시간)', () => {
     expect(formatHours(s.hours)).toBe('연장 2시간 · 야간 2시간');
   });
 
-  it('반나절도 일차 순번은 1씩', () => {
+  it('출근일수 · 공수 표시', async () => {
+    const { summarizeMonth, formatAttendance } = await import('../lib/dayCount');
+    expect(formatAttendance(summarizeMonth(records, '2026-09'))).toBe('출근 3일 · 공수 2.5');
+  });
+
+  it('반공수도 일차 순번은 1씩', () => {
     expect(computeDayNumbers(records, '2026-09').get('2026-09-03')).toBe(3);
   });
 
   it('하루 요약', async () => {
     const { describeDay } = await import('../lib/dayCount');
-    expect(describeDay(R('2026-09-02', { half: true, extra: 1.5 }))).toBe('반나절 · 추가근무 1.5시간');
+    expect(describeDay(R('2026-09-02', { half: true, extra: 1.5 }))).toBe('반공수 · 추가근무 1.5시간');
     expect(describeDay(R('2026-09-02', { worked: false }))).toBe('');
   });
 });

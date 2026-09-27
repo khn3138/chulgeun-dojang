@@ -80,7 +80,7 @@ export function Home({ navigate, openDay }: Props) {
       </BigButton>
 
       <p className="home-count">
-        이번 달 근무: <strong>{formatNumber(summary.days)}일</strong>
+        이번 달 출근 <strong>{summary.workedCount}일</strong> · 공수 <strong>{formatNumber(summary.days)}</strong>
       </p>
       {monthHours && <p className="home-hours">{monthHours}</p>}
       {(todayDetail || todayRecord?.memo) && (

@@ -4,7 +4,7 @@ type Countable = Pick<DayRecord, 'date' | 'worked'>;
 
 /**
  * "N일차" 계산: 해당 월에서 출근한 날을 날짜순으로 셌을 때의 순번.
- * 반나절 근무한 날도 순번은 1씩 올라간다 (합계만 0.5일).
+ * 반공수로 일한 날도 순번은 1씩 올라간다 (공수 합계만 0.5).
  * 저장하지 않고 항상 계산한다 (기존 엑셀 A열 숫자와 같은 방식).
  */
 export function computeDayNumbers(records: Countable[], ym: string): Map<string, number> {
@@ -22,9 +22,9 @@ export function countWorkedDays(records: Countable[], ym: string): number {
 }
 
 export interface MonthSummary {
-  /** 근무일 합계 (반나절 = 0.5) */
+  /** 공수 합계 (하루 1공수, 반공수 0.5) */
   days: number;
-  /** 출근한 날 수 (반나절도 1) */
+  /** 출근일수 (반공수인 날도 1) */
   workedCount: number;
   hours: Record<HourKind, number>;
 }
@@ -52,14 +52,19 @@ export function formatHours(hours: Record<HourKind, number>): string {
     .join(' · ');
 }
 
-/** 하루치 근무 내용 요약: '반나절 · 연장 1시간' */
+/** 하루치 근무 내용 요약: '반공수 · 연장 1시간' */
 export function describeDay(r: DayRecord): string {
   if (!r.worked) return '';
   const parts: string[] = [];
-  if (r.half) parts.push('반나절');
+  if (r.half) parts.push('반공수');
   for (const k of HOUR_KINDS) {
     const h = hoursOf(r, k);
     if (h > 0) parts.push(`${HOUR_LABELS[k]} ${formatNumber(h)}시간`);
   }
   return parts.join(' · ');
+}
+
+/** '출근 3일 · 공수 2.5' */
+export function formatAttendance(summary: MonthSummary): string {
+  return `출근 ${summary.workedCount}일 · 공수 ${formatNumber(summary.days)}`;
 }

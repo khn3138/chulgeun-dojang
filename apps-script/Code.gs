@@ -12,7 +12,7 @@
  *
  * 시트 구조
  *  records: date | worked | memo | updatedAt | amount | overtime | night | extra
- *           (amount: 하루 1, 반나절 0.5, 안 함 0 / overtime·night·extra: 연장·야간·추가근무 시간)
+ *           (amount: 공수 — 하루 1, 반공수 0.5, 안 함 0 / overtime·night·extra: 연장·야간·추가근무 시간)
  *  months : month | memo | updatedAt   (월별 정리 메모, month = 'YYYY-MM')
  */
 
@@ -236,7 +236,7 @@ function json_(obj) {
  *  - 32행부터: 그 달의 정리 메모 (예: '21.5일 근무', '연장 3시간') → months 시트로.
  *
  * 메모에서 아래를 읽어 앱의 입력 칸으로도 옮긴다 (메모 글자는 그대로 둔다):
- *  - '반차' / '반나절' → 반나절 근무 (또는 A열 일차가 앞날보다 0.5만 늘어난 경우)
+ *  - '반공수' / '반차' / '반나절' → 반공수 (또는 A열 일차가 앞날보다 0.5만 늘어난 경우)
  *  - '연장 1시간', '야간 2', '추가근무 1.5시간', '연장 30분' → 해당 근무 시간
  * 이미 records / months 에 있는 날짜·월은 덮어쓰지 않는다. 결과는 실행 로그에 나온다.
  */
@@ -275,7 +275,7 @@ function migrateLegacy() {
       if (!worked && !memo) continue;
       var rec = { date: ymKey + '-' + pad2_(d), worked: worked, memo: memo, updatedAt: LEGACY_TIME };
       if (worked) {
-        var half = /반차|반나절/.test(memo) || num - prevNumber === 0.5;
+        var half = /반공수|반차|반나절/.test(memo) || num - prevNumber === 0.5;
         rec.amount = half ? 0.5 : 1;
         rec.overtime = parseHours_(memo, /연장/);
         rec.night = parseHours_(memo, /야간/);

@@ -130,6 +130,29 @@ export function Settings({ onBack }: { onBack: () => void }) {
       </section>
 
       <section className="card">
+        <h2>근무 시간 입력</h2>
+        <div className="field">
+          <span className="field-label">연장·야간·추가근무 [+] 한 번에</span>
+          <div className="seg">
+            {([
+              { value: 0.5, label: '30분씩' },
+              { value: 1, label: '1시간씩' },
+            ] as const).map((o) => (
+              <button
+                type="button"
+                key={o.value}
+                className={(settings.hourStep ?? 0.5) === o.value ? 'active' : ''}
+                aria-pressed={(settings.hourStep ?? 0.5) === o.value}
+                onClick={() => void save({ hourStep: o.value })}
+              >
+                {o.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="card">
         <h2>달력 표시</h2>
         <label className="check-field">
           <input
@@ -188,7 +211,7 @@ export function Settings({ onBack }: { onBack: () => void }) {
             </div>
           ))}
         </div>
-        <p className="hint">가운데(4일)는 반나절 근무한 날 모양이에요.</p>
+        <p className="hint">가운데(4일)는 반공수인 날 모양이에요.</p>
       </section>
 
       <section className="card">

@@ -36,7 +36,7 @@ export function Calendar({ month, onMonthChange, onBack, openDay }: Props) {
       <ScreenHeader title="달력" onBack={onBack} />
       <MonthNav month={month} onChange={onMonthChange} />
 
-      <MonthSummaryView label={`${formatMonthShort(month)} 근무`} summary={summary} />
+      <MonthSummaryView label={formatMonthShort(month)} summary={summary} />
 
       <div className="view-toggle" role="tablist">
         <button type="button" role="tab" aria-selected={!listView} className={!listView ? 'active' : ''} onClick={() => setListView(false)}>

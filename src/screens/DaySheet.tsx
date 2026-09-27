@@ -7,6 +7,7 @@ import { getRecord, restoreRecord, saveRecord } from '../db/records';
 import { formatDayTitle } from '../lib/date';
 import { appendQuickMemo, shouldAskWorked } from '../lib/memoRule';
 import { scheduleSync } from '../sync/sync';
+import { useSettings } from '../hooks';
 import { SAVE_FAILED } from '../lib/messages';
 import { HOUR_KINDS, HOUR_LABELS, normalizeDayData, type DayData, type HourKind } from '../types';
 
@@ -27,6 +28,7 @@ interface Props {
 export const DaySheet = forwardRef<DaySheetHandle, Props>(function DaySheet({ date, onClosed }, ref) {
   const toast = useToast();
   const dismissToast = useDismissToast();
+  const hourStep = useSettings().hourStep ?? 0.5;
   const [loaded, setLoaded] = useState(false);
   const [data, setData] = useState<DayData>(EMPTY);
   const [asking, setAsking] = useState(false);
@@ -121,7 +123,7 @@ export const DaySheet = forwardRef<DaySheetHandle, Props>(function DaySheet({ da
 
   const toggleWorked = (value: boolean) => {
     workedTouched.current = true;
-    // [안 함]을 누르면 반나절·근무시간도 비운다.
+    // [안 함]을 누르면 반공수·근무시간도 비운다.
     setData((d) => (value ? { ...d, worked: true } : normalizeDayData({ ...d, worked: false })));
   };
 
@@ -171,19 +173,19 @@ export const DaySheet = forwardRef<DaySheetHandle, Props>(function DaySheet({ da
         </div>
 
         {worked && (
-          <div className="seg day-amount" role="radiogroup" aria-label="근무량">
+          <div className="seg day-amount" role="radiogroup" aria-label="공수">
             <button type="button" role="radio" aria-checked={!data.half} className={!data.half ? 'active' : ''} onClick={() => setHalf(false)}>
-              하루
+              1공수 (하루)
             </button>
             <button type="button" role="radio" aria-checked={!!data.half} className={data.half ? 'active' : ''} onClick={() => setHalf(true)}>
-              반나절
+              반공수 (0.5)
             </button>
           </div>
         )}
 
         <div className="steppers">
           {HOUR_KINDS.map((k) => (
-            <HourStepper key={k} label={HOUR_LABELS[k]} value={data[k] ?? 0} onChange={(v) => setHours(k, v)} disabled={!loaded} />
+            <HourStepper key={k} label={HOUR_LABELS[k]} value={data[k] ?? 0} onChange={(v) => setHours(k, v)} disabled={!loaded} step={hourStep} />
           ))}
         </div>
 

@@ -58,8 +58,7 @@ export const ExportSheet = forwardRef<HTMLDivElement, Props>(function ExportShee
       </table>
       <div className="es-summary">
         <p className="es-total">
-          총 근무 <strong>{formatNumber(summary.days)}일</strong>
-          {summary.days !== summary.workedCount && <span className="es-sub"> (출근 {summary.workedCount}일)</span>}
+          총 출근일 <strong>{summary.workedCount}일</strong> · 공수 <strong>{formatNumber(summary.days)}</strong>
         </p>
         {hours && <p className="es-hours">{hours}</p>}
       </div>
