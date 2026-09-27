@@ -17,6 +17,7 @@ export function HourStepper({ label, value, onChange, disabled, step = 0.5 }: Pr
   return (
     <div className={`stepper ${value > 0 ? 'has-value' : ''}`}>
       <span className="stepper-label">{label}</span>
+      <span className="stepper-controls">
       <button
         type="button"
         className="stepper-btn"
@@ -38,6 +39,7 @@ export function HourStepper({ label, value, onChange, disabled, step = 0.5 }: Pr
       >
         +
       </button>
+      </span>
     </div>
   );
 }
