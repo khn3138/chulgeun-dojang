@@ -105,6 +105,7 @@ export function Export({ month, onMonthChange, onBack }: Props) {
             records={records ?? []}
             includeMemoOnly={includeMemoOnly}
             monthMemo={monthNote?.memo ?? ''}
+            showEquivalent={settings.showOvertimeEquivalent}
             generatedAt={generatedAt}
           />
         </div>

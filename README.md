@@ -65,7 +65,7 @@
 - 기록은 먼저 폰에 저장되고, 인터넷이 되면 3초 뒤 시트로 올라갑니다. 실패해도 조용히 다음 기회(앱 실행, 인터넷 복귀)에 다시 시도합니다.
 - 앱을 열 때 시트 내용을 받아와 **더 최근에 고친 쪽**을 남깁니다.
 - 시트에서 직접 고치면 `onEdit`가 `updatedAt`을 갱신해 앱에 반영됩니다.
-- `records` 시트 열: `date | worked(TRUE/FALSE) | memo | updatedAt | amount(하루 1, 반나절 0.5) | overtime(연장) | night(야간) | extra(추가근무)`
+- `records` 시트 열: `date | worked(TRUE/FALSE) | memo | updatedAt | amount(공수: 하루 1, 반공수 0.5) | overtime(연장) | night(야간) | extra(추가근무) | early(조기출근)`
 - `months` 시트 열: `month(2026-09) | memo | updatedAt` — 월별 정리 메모
 
 #### Code.gs를 새 버전으로 바꿀 때 (URL 유지)

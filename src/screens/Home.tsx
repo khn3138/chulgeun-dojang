@@ -4,11 +4,11 @@ import { InAppBanner } from '../components/InAppBanner';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useToast } from '../components/Toast';
 import { restoreRecord, saveRecord } from '../db/records';
-import { computeDayNumbers, describeDay, formatHours, formatNumber, summarizeMonth } from '../lib/dayCount';
+import { computeDayNumbers, describeDay, formatHours, formatNumber, formatOvertimeEquivalent, summarizeMonth } from '../lib/dayCount';
 import { formatDayTitle, monthKeyOf } from '../lib/date';
 import { scheduleSync } from '../sync/sync';
 import { SAVE_FAILED } from '../lib/messages';
-import { useMonthRecords, useToday } from '../hooks';
+import { useMonthRecords, useSettings, useToday } from '../hooks';
 import type { Screen } from '../App';
 
 interface Props {
@@ -28,6 +28,8 @@ export function Home({ navigate, openDay }: Props) {
   const dayNumbers = computeDayNumbers(records ?? [], ym);
   const summary = summarizeMonth(records ?? [], ym);
   const monthHours = formatHours(summary.hours);
+  const settings = useSettings();
+  const monthEquiv = settings.showOvertimeEquivalent ? formatOvertimeEquivalent(summary.hours) : '';
   const todayDetail = todayRecord ? describeDay(todayRecord) : '';
 
   const setWorked = async (value: boolean) => {
@@ -80,9 +82,10 @@ export function Home({ navigate, openDay }: Props) {
       </BigButton>
 
       <p className="home-count">
-        이번 달 근무: <strong>{formatNumber(summary.days)}일</strong>
+        이번 달 출근 <strong>{summary.workedCount}일</strong> · 공수 <strong>{formatNumber(summary.days)}</strong>
       </p>
       {monthHours && <p className="home-hours">{monthHours}</p>}
+      {monthEquiv && <p className="home-equiv">{monthEquiv}</p>}
       {(todayDetail || todayRecord?.memo) && (
         <p className="home-memo">📝 오늘: {[todayDetail, todayRecord?.memo].filter(Boolean).join(' · ')}</p>
       )}

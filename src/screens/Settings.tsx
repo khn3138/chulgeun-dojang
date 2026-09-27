@@ -130,6 +130,56 @@ export function Settings({ onBack }: { onBack: () => void }) {
       </section>
 
       <section className="card">
+        <h2>근무 시간 입력</h2>
+        <div className="field">
+          <span className="field-label">연장·야간·추가근무 [+] 한 번에</span>
+          <div className="seg">
+            {([
+              { value: 0.5, label: '30분씩' },
+              { value: 1, label: '1시간씩' },
+            ] as const).map((o) => (
+              <button
+                type="button"
+                key={o.value}
+                className={(settings.hourStep ?? 0.5) === o.value ? 'active' : ''}
+                aria-pressed={(settings.hourStep ?? 0.5) === o.value}
+                onClick={() => void save({ hourStep: o.value })}
+              >
+                {o.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="card">
+        <h2>날짜 창에 보일 시간 줄</h2>
+        <p className="hint">연장은 항상 보여요. 숨긴 줄이라도 이미 시간이 적힌 날에는 보여요.</p>
+        {([
+          { key: 'showEarly', label: '조기출근 (연장 2배)', def: true },
+          { key: 'showNight', label: '야간', def: false },
+          { key: 'showExtra', label: '추가근무', def: false },
+        ] as const).map((o) => (
+          <label className="check-field" key={o.key}>
+            <input
+              type="checkbox"
+              checked={settings[o.key] ?? o.def}
+              onChange={(e) => void save({ [o.key]: e.target.checked })}
+            />
+            {o.label}
+          </label>
+        ))}
+        <label className="check-field">
+          <input
+            type="checkbox"
+            checked={settings.showOvertimeEquivalent ?? false}
+            onChange={(e) => void save({ showOvertimeEquivalent: e.target.checked })}
+          />
+          연장 환산 보기 (연장 + 조기출근×2)
+        </label>
+      </section>
+
+      <section className="card">
         <h2>달력 표시</h2>
         <label className="check-field">
           <input
@@ -188,7 +238,7 @@ export function Settings({ onBack }: { onBack: () => void }) {
             </div>
           ))}
         </div>
-        <p className="hint">가운데(4일)는 반나절 근무한 날 모양이에요.</p>
+        <p className="hint">가운데(4일)는 반공수인 날 모양이에요.</p>
       </section>
 
       <section className="card">

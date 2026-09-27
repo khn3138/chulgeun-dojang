@@ -1,5 +1,5 @@
 import { forwardRef } from 'react';
-import { computeDayNumbers, describeDay, formatHours, formatNumber, summarizeMonth } from '../lib/dayCount';
+import { computeDayNumbers, describeDay, formatHours, formatNumber, formatOvertimeEquivalent, summarizeMonth } from '../lib/dayCount';
 import { dayOfMonth, formatMonthTitle, weekdayIndex, weekdayKo } from '../lib/date';
 import type { DayRecord } from '../types';
 
@@ -9,17 +9,19 @@ interface Props {
   records: DayRecord[];
   includeMemoOnly: boolean;
   monthMemo: string;
+  showEquivalent?: boolean;
   generatedAt: Date;
 }
 
 /** 내보내기 이미지로 찍히는 근무일지 표. 글자 크기 설정과 무관하게 고정 크기(px)로 그린다. */
 export const ExportSheet = forwardRef<HTMLDivElement, Props>(function ExportSheet(
-  { month, workerName, records, includeMemoOnly, monthMemo, generatedAt },
+  { month, workerName, records, includeMemoOnly, monthMemo, showEquivalent, generatedAt },
   ref,
 ) {
   const dayNumbers = computeDayNumbers(records, month);
   const summary = summarizeMonth(records, month);
   const hours = formatHours(summary.hours);
+  const equiv = showEquivalent ? formatOvertimeEquivalent(summary.hours) : '';
   const rows = records
     .filter((r) => r.worked || (includeMemoOnly && r.memo.trim() !== ''))
     .sort((a, b) => a.date.localeCompare(b.date));
@@ -58,10 +60,10 @@ export const ExportSheet = forwardRef<HTMLDivElement, Props>(function ExportShee
       </table>
       <div className="es-summary">
         <p className="es-total">
-          총 근무 <strong>{formatNumber(summary.days)}일</strong>
-          {summary.days !== summary.workedCount && <span className="es-sub"> (출근 {summary.workedCount}일)</span>}
+          총 출근일 <strong>{summary.workedCount}일</strong> · 공수 <strong>{formatNumber(summary.days)}</strong>
         </p>
         {hours && <p className="es-hours">{hours}</p>}
+        {equiv && <p className="es-equiv">{equiv}</p>}
       </div>
       {monthMemo.trim() && <p className="es-month-memo">{monthMemo}</p>}
       <p className="es-generated">만든 날: {stamp} · 출근도장</p>

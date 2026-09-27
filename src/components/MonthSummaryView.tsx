@@ -1,14 +1,16 @@
-import { formatHours, formatNumber, type MonthSummary } from '../lib/dayCount';
+import { formatHours, formatNumber, formatOvertimeEquivalent, type MonthSummary } from '../lib/dayCount';
 
-/** '근무 21.5일' + '연장 3시간 · 야간 1시간' */
-export function MonthSummaryView({ label, summary }: { label: string; summary: MonthSummary }) {
+/** '9월 출근 3일 · 공수 2.5' + '연장 3시간 · 야간 1시간' */
+export function MonthSummaryView({ label, summary, showEquivalent }: { label: string; summary: MonthSummary; showEquivalent?: boolean }) {
   const hours = formatHours(summary.hours);
+  const equiv = showEquivalent ? formatOvertimeEquivalent(summary.hours) : '';
   return (
     <div className="month-summary">
       <p className="month-total">
-        {label} <strong>{formatNumber(summary.days)}일</strong>
+        {label} 출근 <strong>{summary.workedCount}일</strong> · 공수 <strong>{formatNumber(summary.days)}</strong>
       </p>
       {hours && <p className="month-hours">{hours}</p>}
+      {equiv && <p className="month-equiv">{equiv}</p>}
     </div>
   );
 }

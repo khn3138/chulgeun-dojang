@@ -51,18 +51,50 @@ describe('월 합계 (반나절·근무시간)', () => {
   it('반나절은 0.5일, 시간은 항목별로 더한다', async () => {
     const { summarizeMonth, formatHours, formatNumber } = await import('../lib/dayCount');
     const s = summarizeMonth(records, '2026-09');
-    expect(s).toEqual({ days: 2.5, workedCount: 3, hours: { overtime: 2, night: 2, extra: 0 } });
+    expect(s).toEqual({ days: 2.5, workedCount: 3, hours: { overtime: 2, early: 0, night: 2, extra: 0 } });
     expect(formatNumber(s.days)).toBe('2.5');
     expect(formatHours(s.hours)).toBe('연장 2시간 · 야간 2시간');
   });
 
-  it('반나절도 일차 순번은 1씩', () => {
+  it('출근일수 · 공수 표시', async () => {
+    const { summarizeMonth, formatAttendance } = await import('../lib/dayCount');
+    expect(formatAttendance(summarizeMonth(records, '2026-09'))).toBe('출근 3일 · 공수 2.5');
+  });
+
+  it('반공수도 일차 순번은 1씩', () => {
     expect(computeDayNumbers(records, '2026-09').get('2026-09-03')).toBe(3);
   });
 
   it('하루 요약', async () => {
     const { describeDay } = await import('../lib/dayCount');
-    expect(describeDay(R('2026-09-02', { half: true, extra: 1.5 }))).toBe('반나절 · 추가근무 1.5시간');
+    expect(describeDay(R('2026-09-02', { half: true, extra: 1.5 }))).toBe('반공수 · 추가근무 1.5시간');
     expect(describeDay(R('2026-09-02', { worked: false }))).toBe('');
+  });
+});
+
+describe('출근일수·공수, 조기출근, 연장 환산', () => {
+  const day = (d: number, extra: Partial<import('../types').DayRecord> = {}) => ({
+    date: `2026-09-${String(d).padStart(2, '0')}`, worked: true, memo: '', updatedAt: 0, synced: true, ...extra,
+  });
+
+  it('8일 출근 중 2일 반공수 → 출근 8일 · 공수 7', async () => {
+    const { formatAttendance, summarizeMonth } = await import('../lib/dayCount');
+    const recs = Array.from({ length: 8 }, (_, i) => day(i + 1, { half: i < 2 }));
+    expect(formatAttendance(summarizeMonth(recs, '2026-09'))).toBe('출근 8일 · 공수 7');
+  });
+
+  it('연장 3 + 조기출근 1 → 환산 5시간', async () => {
+    const { formatHours, formatOvertimeEquivalent, summarizeMonth } = await import('../lib/dayCount');
+    const s = summarizeMonth([day(1, { overtime: 2 }), day(2, { overtime: 1, early: 1 })], '2026-09');
+    expect(formatHours(s.hours)).toBe('연장 3시간 · 조기출근 1시간');
+    expect(formatOvertimeEquivalent(s.hours)).toBe('연장 환산 5시간 (연장 3 + 조기출근 1×2)');
+    expect(formatOvertimeEquivalent(summarizeMonth([day(1)], '2026-09').hours)).toBe('');
+  });
+
+  it('숨긴 줄이라도 값이 있으면 보인다', async () => {
+    const { visibleHourKinds } = await import('../types');
+    expect(visibleHourKinds({})).toEqual(['overtime', 'early']);
+    expect(visibleHourKinds({ showEarly: false })).toEqual(['overtime']);
+    expect(visibleHourKinds({}, { worked: true, memo: '', night: 1 })).toEqual(['overtime', 'early', 'night']);
   });
 });
