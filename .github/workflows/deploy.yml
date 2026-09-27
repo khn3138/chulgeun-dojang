@@ -1,9 +1,19 @@
 name: Deploy to GitHub Pages
 
+# main에 병합되면 본 앱(/chulgeun-dojang/)을 배포한다.
+# 함께 미리보기판(/chulgeun-dojang/preview/)도 preview_ref 브랜치(기본: 작업 브랜치)로 만들어 올린다.
+# 병합 전 폰에서 확인하려면: Actions → Deploy to GitHub Pages → Run workflow (main에서 실행)
+#  → 본 앱은 main 그대로, /preview/ 만 작업 브랜치의 최신 코드로 바뀐다.
+
 on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      preview_ref:
+        description: '미리보기(/preview/)로 올릴 브랜치'
+        required: false
+        default: 'claude/new-session-7y5lfv'
 
 permissions:
   contents: read
@@ -28,6 +38,25 @@ jobs:
         env:
           TZ: Asia/Seoul
       - run: npm run build
+
+      # ---- 미리보기판 (실패해도 본 앱 배포는 계속) ----
+      - name: 미리보기 브랜치 가져오기
+        id: preview_checkout
+        continue-on-error: true
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.preview_ref || 'claude/new-session-7y5lfv' }}
+          path: preview-src
+      - name: 미리보기판 빌드 (/preview/)
+        if: steps.preview_checkout.outcome == 'success'
+        continue-on-error: true
+        working-directory: preview-src
+        run: |
+          # 미리보기 기능이 없는 예전 코드는 본 앱 경로로 빌드되므로 건너뛴다
+          grep -q APP_PREVIEW vite.config.ts || { echo "미리보기 미지원 브랜치 — 건너뜀"; exit 0; }
+          npm ci
+          APP_PREVIEW=1 npx vite build --outDir ../dist/preview --emptyOutDir
+
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

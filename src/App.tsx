@@ -16,7 +16,7 @@ interface NavState {
 }
 
 const BASE_FONT_PX = 20;
-const BUILD_KEY = 'chulgeun-dojang:build';
+const BUILD_KEY = __PREVIEW__ ? 'chulgeun-dojang-preview:build' : 'chulgeun-dojang:build';
 
 /** 새 버전으로 바뀐 뒤 처음 열면 한 번 알려 준다. (처음 설치 때는 조용히) */
 function UpdateNotice() {
@@ -24,8 +24,8 @@ function UpdateNotice() {
   useEffect(() => {
     try {
       const seen = localStorage.getItem(BUILD_KEY);
-      if (seen && seen !== __BUILD_TIME__) toast(`새 버전으로 업데이트됐어요 ✓ (${__BUILD_TIME__})`);
-      localStorage.setItem(BUILD_KEY, __BUILD_TIME__);
+      if (seen && seen !== __BUILD_ID__) toast(`새 버전으로 업데이트됐어요 ✓ (${__BUILD_TIME__})`);
+      localStorage.setItem(BUILD_KEY, __BUILD_ID__);
     } catch {
       /* 저장소를 못 쓰면 안내만 생략 */
     }
@@ -86,6 +86,7 @@ export function App() {
   return (
     <ToastProvider>
       <UpdateNotice />
+      {__PREVIEW__ && <div className="preview-banner">🧪 미리보기 (테스트용) · 실제 기록과 따로 저장돼요</div>}
       {screen === 'home' && <Home navigate={navigate} openDay={openDay} />}
       {screen === 'calendar' && <Calendar month={month} onMonthChange={setMonth} onBack={goHome} openDay={openDay} />}
       {screen === 'export' && <Export month={month} onMonthChange={setMonth} onBack={goHome} />}

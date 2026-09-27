@@ -891,3 +891,16 @@ textarea:focus-visible {
   flex: 1;
   cursor: default;
 }
+
+/* ---------- 미리보기판 표시 ---------- */
+.preview-banner {
+  position: sticky;
+  top: 0;
+  z-index: 25;
+  padding: 0.35rem 16px;
+  background: #e67700;
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.85rem;
+  text-align: center;
+}
