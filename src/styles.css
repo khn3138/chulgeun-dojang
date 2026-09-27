@@ -151,6 +151,17 @@ textarea:focus-visible {
   font-weight: 700;
   color: var(--green-dark);
 }
+.home-equiv,
+.month-equiv {
+  margin: 0;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+.home-equiv {
+  margin-top: -0.6rem;
+}
 .home-memo {
   margin: 0;
   text-align: center;
@@ -917,4 +928,15 @@ textarea:focus-visible {
   font-weight: 800;
   font-size: 0.85rem;
   text-align: center;
+}
+
+/* 날짜 창 메모는 두 줄 정도 */
+.memo-input.memo-short {
+  min-height: 0;
+  height: calc(2 * 1.45em + 1.2rem + 4px);
+}
+.es-equiv {
+  margin: 4px 0 0;
+  font-size: 18px;
+  color: #444;
 }

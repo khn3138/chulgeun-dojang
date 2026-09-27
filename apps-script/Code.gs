@@ -11,14 +11,14 @@
  * 코드를 고친 뒤에는 "새 배포"가 아니라 배포 관리 → ✏️ → 버전: 새 버전 으로 배포해야 URL이 유지된다.
  *
  * 시트 구조
- *  records: date | worked | memo | updatedAt | amount | overtime | night | extra
- *           (amount: 공수 — 하루 1, 반공수 0.5, 안 함 0 / overtime·night·extra: 연장·야간·추가근무 시간)
+ *  records: date | worked | memo | updatedAt | amount | overtime | night | extra | early
+ *           (amount: 공수 — 하루 1, 반공수 0.5, 안 함 0 / overtime·night·extra·early: 연장·야간·추가근무·조기출근 시간)
  *  months : month | memo | updatedAt   (월별 정리 메모, month = 'YYYY-MM')
  */
 
 var RECORDS = {
   name: 'records',
-  headers: ['date', 'worked', 'memo', 'updatedAt', 'amount', 'overtime', 'night', 'extra'],
+  headers: ['date', 'worked', 'memo', 'updatedAt', 'amount', 'overtime', 'night', 'extra', 'early'],
   keyRe: /^\d{4}-\d{2}-\d{2}$/,
   updatedCol: 4,
 };
@@ -133,6 +133,7 @@ function readRecords_() {
       overtime: Number(row[5]) || 0,
       night: Number(row[6]) || 0,
       extra: Number(row[7]) || 0,
+      early: Number(row[8]) || 0,
     });
   });
   return out;
@@ -161,6 +162,7 @@ function recordToRow_(r) {
     Number(r.overtime) || 0,
     Number(r.night) || 0,
     Number(r.extra) || 0,
+    Number(r.early) || 0,
   ];
 }
 
@@ -237,7 +239,7 @@ function json_(obj) {
  *
  * 메모에서 아래를 읽어 앱의 입력 칸으로도 옮긴다 (메모 글자는 그대로 둔다):
  *  - '반공수' / '반차' / '반나절' → 반공수 (또는 A열 일차가 앞날보다 0.5만 늘어난 경우)
- *  - '연장 1시간', '야간 2', '추가근무 1.5시간', '연장 30분' → 해당 근무 시간
+ *  - '연장 1시간', '야간 2', '추가근무 1.5시간', '조기출근 1', '연장 30분' → 해당 근무 시간
  * 이미 records / months 에 있는 날짜·월은 덮어쓰지 않는다. 결과는 실행 로그에 나온다.
  */
 var LEGACY_DEFAULT_YEAR = new Date().getFullYear();
@@ -280,6 +282,7 @@ function migrateLegacy() {
         rec.overtime = parseHours_(memo, /연장/);
         rec.night = parseHours_(memo, /야간/);
         rec.extra = parseHours_(memo, /추가\s*근무|추가/);
+        rec.early = parseHours_(memo, /조기\s*출근|조기/);
         prevNumber = num;
       }
       if (!haveDay[rec.date]) records.push(rec);

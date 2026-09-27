@@ -7,6 +7,7 @@ import { ScreenHeader } from '../components/ScreenHeader';
 import { computeDayNumbers, describeDay, formatNumber, summarizeMonth } from '../lib/dayCount';
 import { dayOfMonth, daysOfMonth, firstWeekdayOfMonth, formatMonthShort, weekdayIndex, weekdayKo } from '../lib/date';
 import { useLoadedSettings, useMonthRecords, useToday } from '../hooks';
+import { HOUR_KINDS } from '../types';
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -36,7 +37,7 @@ export function Calendar({ month, onMonthChange, onBack, openDay }: Props) {
       <ScreenHeader title="달력" onBack={onBack} />
       <MonthNav month={month} onChange={onMonthChange} />
 
-      <MonthSummaryView label={formatMonthShort(month)} summary={summary} />
+      <MonthSummaryView label={formatMonthShort(month)} summary={summary} showEquivalent={settings?.showOvertimeEquivalent} />
 
       <div className="view-toggle" role="tablist">
         <button type="button" role="tab" aria-selected={!listView} className={!listView ? 'active' : ''} onClick={() => setListView(false)}>
@@ -61,7 +62,7 @@ export function Calendar({ month, onMonthChange, onBack, openDay }: Props) {
             const r = byDate.get(date);
             const n = dayNumbers.get(date);
             const detail = r ? describeDay(r) : '';
-            const extraHours = r ? (r.overtime ?? 0) + (r.night ?? 0) + (r.extra ?? 0) : 0;
+            const extraHours = r ? HOUR_KINDS.reduce((sum, k) => sum + (r[k] ?? 0), 0) : 0;
             const label = `${dayOfMonth(date)}일${n ? `, 출근 ${n}일차` : ''}${detail ? `, ${detail}` : ''}${r?.memo ? `, 메모 ${r.memo}` : ''}`;
             return (
               <button

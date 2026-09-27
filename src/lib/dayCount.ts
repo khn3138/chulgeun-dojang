@@ -1,4 +1,4 @@
-import { HOUR_KINDS, HOUR_LABELS, hoursOf, type DayRecord, type HourKind } from '../types';
+import { EARLY_MULTIPLIER, HOUR_KINDS, HOUR_LABELS, hoursOf, type DayRecord, type HourKind } from '../types';
 
 type Countable = Pick<DayRecord, 'date' | 'worked'>;
 
@@ -30,7 +30,7 @@ export interface MonthSummary {
 }
 
 export function summarizeMonth(records: DayRecord[], ym: string): MonthSummary {
-  const summary: MonthSummary = { days: 0, workedCount: 0, hours: { overtime: 0, night: 0, extra: 0 } };
+  const summary: MonthSummary = { days: 0, workedCount: 0, hours: { overtime: 0, early: 0, night: 0, extra: 0 } };
   for (const r of records) {
     if (!r.worked || !r.date.startsWith(ym + '-')) continue;
     summary.workedCount += 1;
@@ -67,4 +67,17 @@ export function describeDay(r: DayRecord): string {
 /** '출근 3일 · 공수 2.5' */
 export function formatAttendance(summary: MonthSummary): string {
   return `출근 ${summary.workedCount}일 · 공수 ${formatNumber(summary.days)}`;
+}
+
+/** 연장 환산 시간 = 연장 + 조기출근×2. 둘 다 없으면 null */
+export function overtimeEquivalent(hours: Record<HourKind, number>): number | null {
+  if (hours.overtime <= 0 && hours.early <= 0) return null;
+  return hours.overtime + hours.early * EARLY_MULTIPLIER;
+}
+
+/** '연장 환산 5시간 (연장 3 + 조기출근 1×2)' */
+export function formatOvertimeEquivalent(hours: Record<HourKind, number>): string {
+  const eq = overtimeEquivalent(hours);
+  if (eq === null) return '';
+  return `연장 환산 ${formatNumber(eq)}시간 (연장 ${formatNumber(hours.overtime)} + 조기출근 ${formatNumber(hours.early)}×${EARLY_MULTIPLIER})`;
 }

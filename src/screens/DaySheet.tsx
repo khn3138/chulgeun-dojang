@@ -9,10 +9,10 @@ import { appendQuickMemo, shouldAskWorked } from '../lib/memoRule';
 import { scheduleSync } from '../sync/sync';
 import { useSettings } from '../hooks';
 import { SAVE_FAILED } from '../lib/messages';
-import { HOUR_KINDS, HOUR_LABELS, normalizeDayData, type DayData, type HourKind } from '../types';
+import { HOUR_LABELS, normalizeDayData, visibleHourKinds, type DayData, type HourKind } from '../types';
 
 // 연장·야간·추가근무는 시간 버튼으로 입력하므로 메모 버튼에서는 뺐다.
-const QUICK_MEMOS = ['조퇴', '지각'];
+const QUICK_MEMOS = ['오전', '오후', '야간', '조퇴', '지각'];
 const EMPTY: DayData = { worked: false, memo: '' };
 
 export interface DaySheetHandle {
@@ -28,7 +28,8 @@ interface Props {
 export const DaySheet = forwardRef<DaySheetHandle, Props>(function DaySheet({ date, onClosed }, ref) {
   const toast = useToast();
   const dismissToast = useDismissToast();
-  const hourStep = useSettings().hourStep ?? 0.5;
+  const settings = useSettings();
+  const hourStep = settings.hourStep ?? 0.5;
   const [loaded, setLoaded] = useState(false);
   const [data, setData] = useState<DayData>(EMPTY);
   const [asking, setAsking] = useState(false);
@@ -184,7 +185,7 @@ export const DaySheet = forwardRef<DaySheetHandle, Props>(function DaySheet({ da
         )}
 
         <div className="steppers">
-          {HOUR_KINDS.map((k) => (
+          {visibleHourKinds(settings, original.current).map((k) => (
             <HourStepper key={k} label={HOUR_LABELS[k]} value={data[k] ?? 0} onChange={(v) => setHours(k, v)} disabled={!loaded} step={hourStep} />
           ))}
         </div>
@@ -194,8 +195,8 @@ export const DaySheet = forwardRef<DaySheetHandle, Props>(function DaySheet({ da
         </label>
         <textarea
           id="memo"
-          className="memo-input"
-          rows={3}
+          className="memo-input memo-short"
+          rows={2}
           value={memo}
           placeholder="예: 조퇴, 현장 이동"
           onChange={(e) => setData((d) => ({ ...d, memo: e.target.value }))}
